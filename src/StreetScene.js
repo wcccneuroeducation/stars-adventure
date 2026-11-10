@@ -1,4 +1,4 @@
-import{WORLD,STREET_ENTRIES,obstacles,shopZone,parkZone}from './world.js';
+import{WORLD,STREET_ENTRIES,obstacles,shopZone,parkZone,homeZone}from './world.js';
 import{createTextures,drawStreet}from './art.js';
 import{Controls}from './controls.js';
 import { restoreStreetChrome } from './ui/sceneChrome.js';
@@ -8,6 +8,7 @@ import { HydrationMovement } from './mechanics/hydration.js';
 import { HydrationHud } from './ui/HydrationHud.js';
 import { SceneDialog } from './ui/SceneDialog.js';
 import { openBackpack } from './ui/backpack.js';
+import { sunnyDayText } from './scenarios/sunnyDayText.js';
 // Temporary diagnostics are disabled after verifying the initial-focus regression.
 const DEBUG_HYDRATION = false;
 export class StreetScene extends Phaser.Scene{
@@ -25,11 +26,14 @@ export class StreetScene extends Phaser.Scene{
   if(spawn.facing==='down')this.player.setFlipX(false);
   this.zone=new Phaser.Geom.Rectangle(shopZone.x,shopZone.y,shopZone.width,shopZone.height);
   this.parkZone=new Phaser.Geom.Rectangle(parkZone.x,parkZone.y,parkZone.width,parkZone.height);
+  this.homeZone=new Phaser.Geom.Rectangle(homeZone.x,homeZone.y,homeZone.width,homeZone.height);
+  this.homePrompt=this.add.text(208,352,sunnyDayText.homePrompt,{fontFamily:'monospace',fontSize:12,color:'#fff0be',backgroundColor:'#294e4b',padding:{x:8,y:7}}).setOrigin(.5).setDepth(12).setVisible(false);
   this.parkPrompt=this.add.text(1728,640,streetText.parkPrompt,{fontFamily:'monospace',fontSize:12,color:'#fff0be',backgroundColor:'#294e4b',padding:{x:8,y:7}}).setOrigin(.5).setDepth(12).setVisible(false);
   this.prompt=this.add.text(1504,380,'[ E ] VISIT SHOP',{fontFamily:'monospace',fontSize:12,color:'#fff0be',backgroundColor:'#294e4b',padding:{x:10,y:7}}).setOrigin(.5).setDepth(12).setVisible(false);
   this.debugGraphics=this.add.graphics().setDepth(30).setVisible(false);this.debugGraphics.lineStyle(2,0xff6686);obstacles.forEach(r=>this.debugGraphics.strokeRect(r.x,r.y,r.width,r.height));this.debugGraphics.lineStyle(2,0x73efda).strokeRect(this.zone.x,this.zone.y,this.zone.width,this.zone.height);
   this.playerDebug=this.add.graphics().setDepth(31).setVisible(false);this.controls=new Controls(this);
   this.debugGraphics.lineStyle(2,0x73efda).strokeRect(parkZone.x,parkZone.y,parkZone.width,parkZone.height);
+  this.debugGraphics.strokeRect(homeZone.x,homeZone.y,homeZone.width,homeZone.height);
   this.dialog=document.querySelector('#shop-dialog');
   this.menu=new SceneDialog(this,this.controls);
   this.hydrationHud=new HydrationHud(this,this.state,{
@@ -96,11 +100,14 @@ export class StreetScene extends Phaser.Scene{
   const d=busy?{x:0,y:0}:this.controls.direction();this.outdoorMovementRequested=Boolean(d.x||d.y);this.player.setVelocity(d.x*150,d.y*150);if(d.x)this.player.setFlipX(d.x<0);this.shadow.setPosition(this.player.x,this.player.y+12);
   const near=Phaser.Geom.Rectangle.Contains(this.zone,this.player.x,this.player.y+10);
   const atPark=Phaser.Geom.Rectangle.Contains(this.parkZone,this.player.x,this.player.y+10);
+  const atHome=Boolean(this.homeZone)&&Phaser.Geom.Rectangle.Contains(this.homeZone,this.player.x,this.player.y+10);
   this.prompt.setVisible(near&&!busy);this.parkPrompt.setVisible(atPark&&!busy);
-  const location=near?'shop':atPark?'park':null;
-  if(location!==this.wasNear){document.querySelector('#hint').textContent=near?'Corner shop · press E or tap INTERACT':atPark?streetText.parkHint:'Explore the street · look for the teal shop sign';this.wasNear=location;}
+  this.homePrompt?.setVisible(atHome&&!busy);
+  const location=near?'shop':atPark?'park':atHome?'home':null;
+  if(location!==this.wasNear){document.querySelector('#hint').textContent=near?'Corner shop · press E or tap INTERACT':atPark?streetText.parkHint:atHome?sunnyDayText.homeHint:'Explore the street · look for the teal shop sign';this.wasNear=location;}
   if(near&&interact&&!busy){this.player.setVelocity(0);this.controls.reset();this.dialog.showModal();}
-  if(atPark&&interact&&!busy){this.player.setVelocity(0);this.controls.reset();this.scene.start('Park');}
+  if(atPark&&interact&&!busy){this.player.setVelocity(0);this.controls.reset();this.scene.start('Park',{visitStartedAt:performance.now()});}
+  if(atHome&&interact&&!busy){this.player.setVelocity(0);this.controls.reset();this.scene.start('Bedroom',{returnHome:this.state.hasVisitedPark});}
   if(this.playerDebug.visible){const b=this.player.body;this.playerDebug.clear().lineStyle(2,0xffe09c).strokeRect(b.x,b.y,b.width,b.height);}
  }
 }

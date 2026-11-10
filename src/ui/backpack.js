@@ -14,12 +14,12 @@ export function backpackActions(state, onDrink, onClose) {
   return actions;
 }
 
-export function openBackpack(dialog, state, onChange) {
+export function openBackpack(dialog, state, onChange, onClose=()=>dialog.close()) {
   const list=document.createElement('ul');
   state.inventory.forEach(id=>{
     const row=document.createElement('li');row.textContent=inventoryItemLabel(state,id);list.append(row);
   });
   dialog.show(text.objects.backpack,state.inventory.length?text.inventoryIntro:text.emptyBackpack,
-    backpackActions(state,()=>{onChange();openBackpack(dialog,state,onChange);},()=>dialog.close()),
+    backpackActions(state,()=>{onChange();openBackpack(dialog,state,onChange,onClose);},onClose),
     {content:state.inventory.length?list:null});
 }

@@ -1,5 +1,13 @@
 // Editable scenario copy. Keep choices neutral: no scores or recommended items.
 export const sunnyDayText = {
+  objectives:{explore:'Explore',headHome:'Head home',complete:'Adventure Complete!'},
+  objectiveLabel:label=>`Objective: ${label}`,
+  parkGoodbye:"That was fun! We'd better head home. See you tomorrow!",
+  headHomeReminder:'See you soon! Take care on the way home.',
+  homeDoor:'Front door',homePrompt:'[ E ] ENTER HOME',homeHint:'Front door · press E or tap INTERACT',
+  homeWelcome:"You're home! What a day!",completeTitle:'Adventure Complete!',
+  completeMessage:'Your adventure has come to an end.',playAgain:'Play Again',finish:'Finish',
+  finishMessage:'Thanks for playing STARS Adventure.',
   title: 'A Sunny Day',
   eyebrow: 'KICKSTART · A SUNNY DAY',
   subtitle: 'Your bedroom',

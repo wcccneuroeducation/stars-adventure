@@ -4,7 +4,7 @@ import { drawBedroom } from './bedroom/art.js';
 import { ROOM, roomBounds, bedroomSolids, bedroomObjects, nearbyObject } from './bedroom/layout.js';
 import { PhoneRing } from './bedroom/PhoneRing.js';
 import { sunnyDayText as text } from './scenarios/sunnyDayText.js';
-import { getSunnyDayState, collectItem, chooseOutfit } from './scenarios/sunnyDayState.js';
+import { getSunnyDayState, startNewAdventure, collectItem, chooseOutfit } from './scenarios/sunnyDayState.js';
 import { SceneDialog } from './ui/SceneDialog.js';
 import { setBedroomChrome } from './ui/sceneChrome.js';
 import { HydrationHud } from './ui/HydrationHud.js';
@@ -12,7 +12,8 @@ import { inventoryItemLabel } from './ui/backpack.js';
 
 export class BedroomScene extends Phaser.Scene {
   constructor() { super('Bedroom'); }
-  create() {
+  create(data={}) {
+    this.completing=false;
     document.querySelector('#status')?.remove();
     setBedroomChrome(text);
     this.state = getSunnyDayState(this.registry);
@@ -47,8 +48,24 @@ export class BedroomScene extends Phaser.Scene {
       debugButton.setAttribute('aria-pressed','false');
     });
     this.nearId = undefined;
-    if (!this.state.callComplete) this.startCall();
+    if(data.returnHome&&this.state.hasVisitedPark)this.beginHomecoming();
+    else if (!this.state.callComplete) this.startCall();
     else document.querySelector('#game').focus({preventScroll:true});
+  }
+  beginHomecoming(){
+    this.completing=true;this.controls.reset();this.player.setVelocity(0);
+    this.dialog.show(text.subtitle,text.homeWelcome,[{label:text.continue,run:()=>this.showCompletion()}],{required:true});
+  }
+  showCompletion(){
+    this.state.completed=true;this.state.objective='complete';this.hydrationHud.render();
+    this.dialog.show(text.completeTitle,text.completeMessage,[
+      {label:text.playAgain,run:()=>this.playAgain()},
+      {label:text.finish,run:()=>this.dialog.show(text.completeTitle,text.finishMessage,[],{required:true})}
+    ],{required:true});
+  }
+  playAgain(){
+    this.controls.reset();this.player.setVelocity(0);startNewAdventure(this.registry);
+    this.dialog.close();this.scene.restart();
   }
   startCall() {
     this.ring.start();
@@ -101,7 +118,7 @@ export class BedroomScene extends Phaser.Scene {
     if(!this.controls)return;
     const pressed=this.controls.consumeInteraction();
     if(Phaser.Input.Keyboard.JustDown(this.controls.keys.C))this.toggleDebug();
-    const d=this.dialog.open?{x:0,y:0}:this.controls.direction();
+    const d=this.dialog.open||this.completing?{x:0,y:0}:this.controls.direction();
     this.player.setVelocity(d.x*150,d.y*150);
     if(d.x)this.player.setFlipX(d.x<0);
     this.shadow.setPosition(this.player.x,this.player.y+12);
@@ -112,7 +129,7 @@ export class BedroomScene extends Phaser.Scene {
       document.querySelector('#hint').textContent=object?text.nearObject(text.objects[object.id]):text.roomHint;
       this.nearId=object?.id;
     }
-    if(object&&pressed&&!this.dialog.open)this.interact(object.id);
+    if(object&&pressed&&!this.dialog.open&&!this.completing)this.interact(object.id);
     if(this.playerDebug.visible){const b=this.player.body;this.playerDebug.clear().lineStyle(2,0xffe09c).strokeRect(b.x,b.y,b.width,b.height);}
   }
 }

@@ -14,7 +14,10 @@ export class FootballModel {
     this.movementMs=0;this.nextEventMs=config.symptomAfterMs;
     this.score.blue=0;this.score.orange=0;this.lastKicker=null;this.resetDelay=0;this.aiClock=0;this.orangeChaser=1;this.resetRound();
   }
-  stop(){this.active=false;this.awaitingChoice=false;}
+  stop(){
+    this.active=false;this.awaitingChoice=false;this.ball.vx=0;this.ball.vy=0;
+    for(const actor of this.actors){actor.vx=0;actor.vy=0;}
+  }
   resetBall(){Object.assign(this.ball,config.ballStart,{vx:0,vy:0});}
   resetRound(){
     this.resetBall();this.ballLock=250;this.resetDelay=0;

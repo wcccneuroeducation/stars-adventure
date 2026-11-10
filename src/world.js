@@ -12,6 +12,8 @@ export const shop={x:1344,y:160,width:288,height:192};
 export const shopZone={x:1408,y:352,width:192,height:80};
 // Existing open gate between the lower wall runs; no change to solid geometry.
 export const parkZone={x:1696,y:608,width:64,height:112};
+// Existing open home frontage, aligned with the leftmost upper-row door.
+export const homeZone={x:184,y:352,width:48,height:64};
 // Whole-building and wall-run rectangles, independent of visual tiles.
 export const obstacles=[...houses,shop,
  // Leave the home frontage (x=128..288) open; retain the neighbours' wall.

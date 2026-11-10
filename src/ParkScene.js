@@ -13,14 +13,20 @@ import { openBackpack } from './ui/backpack.js';
 import { setParkChrome } from './ui/sceneChrome.js';
 import { FootballActivity } from './football/FootballActivity.js';
 import { footballText } from './scenarios/footballText.js';
+import { sunnyDayText } from './scenarios/sunnyDayText.js';
+import { ParkVisitClock } from './scenarios/ParkVisitClock.js';
+import { scenarioSettings } from './settings/scenario.js';
 
 // Reuse the tested street hydration lifecycle and collision-debug toggle without
 // calling street create(): this scene has its own map, objects and interactions.
 export class ParkScene extends StreetScene {
   constructor(){super('Park');}
-  create(){
+  create(data={}){
+    this.visitClock=new ParkVisitClock(scenarioSettings.parkVisitMs,data.visitStartedAt??performance.now());
+    this.visitEndingShown=false;this.pendingVisitEnding=false;this.visitPaused=false;
     document.querySelector('#status')?.remove();setParkChrome(parkText);
     this.state=getSunnyDayState(this.registry);this.resting=false;this.nearId=undefined;
+    this.state.hasVisitedPark=true;
     if(!this.textures.exists('player'))createTextures(this);
     drawPark(this);
     this.waitingFriends=drawWaitingFriends(this);
@@ -36,7 +42,7 @@ export class ParkScene extends StreetScene {
     this.dialog=this.menu.element; // Shared hydration checks the same modal state.
     this.hydrationHud=new HydrationHud(this,this.state,{
       onBackpack:()=>{if(!this.menu.open)openBackpack(this.menu,this.state,()=>this.hydrationHud.render());},
-      onPause:()=>{if(!this.menu.open)this.menu.show(streetText.paused,streetText.pausedMessage,[{label:streetText.resume,run:()=>this.menu.close()}]);}
+      onPause:()=>{if(!this.menu.open){this.visitPaused=true;this.menu.show(streetText.paused,streetText.pausedMessage,[{label:streetText.resume,run:()=>this.menu.close()}]);}}
     });
     this.startHydrationTracking();
     this.prompt=this.add.text(0,0,'',{fontFamily:'monospace',fontSize:12,color:'#fff0be',backgroundColor:'#294e4b',padding:{x:8,y:5}}).setOrigin(.5,1).setDepth(20).setVisible(false);
@@ -48,14 +54,47 @@ export class ParkScene extends StreetScene {
     const debug=document.querySelector('#debug'),toggle=()=>this.toggleDebug();
     debug.setAttribute('aria-pressed','false');debug.addEventListener('click',toggle);
     const finishRest=()=>this.finishRest();this.menu.element.addEventListener('close',finishRest);
+    this.installVisitLifecycle();
     this.events.once('shutdown',()=>{
       debug.removeEventListener('click',toggle);debug.setAttribute('aria-pressed','false');
       this.menu.element.removeEventListener('close',finishRest);this.finishRest();
     });
     document.querySelector('#game').focus({preventScroll:true});
   }
+  installVisitLifecycle(){
+    const clock=this.visitClock,events=this.events,gameEvents=this.game.events;
+    const suspend=()=>clock.suspend();
+    const close=()=>{if(!this.menu.open)this.visitPaused=false;};
+    window.addEventListener('blur',suspend);window.addEventListener('focus',suspend);document.addEventListener('visibilitychange',suspend);
+    for(const event of ['pause','resume','sleep','wake'])events.on(event,suspend);
+    for(const event of ['pause','resume'])gameEvents.on(event,suspend);
+    this.menu.element.addEventListener('close',close);
+    events.once('shutdown',()=>{
+      clock.cancel();window.removeEventListener('blur',suspend);window.removeEventListener('focus',suspend);document.removeEventListener('visibilitychange',suspend);
+      for(const event of ['pause','resume','sleep','wake'])events.off(event,suspend);
+      for(const event of ['pause','resume'])gameEvents.off(event,suspend);
+      this.menu.element.removeEventListener('close',close);
+    });
+  }
+  updateParkVisit(now=performance.now()){
+    if(!this.visitClock)return;
+    const active=!document.hidden&&document.hasFocus()&&!this.game.isPaused&&!this.physics.world.isPaused&&this.sys.isActive()&&!this.visitPaused;
+    if(this.visitClock.tick(now,active)){
+      this.pendingVisitEnding=true;this.football.stop();
+    }
+    this.tryShowVisitEnding();
+  }
+  tryShowVisitEnding(){
+    if(!this.pendingVisitEnding||this.visitEndingShown||this.menu.open||this.resting)return;
+    this.visitEndingShown=true;this.pendingVisitEnding=false;
+    this.state.objective='headHome';this.hydrationHud.render();
+    this.menu.show(parkText.jayName,sunnyDayText.parkGoodbye,[{label:sunnyDayText.continue,run:()=>this.menu.close()}]);
+  }
   interact(id){
     const close=()=>this.menu.close();
+    if(id==='jay'&&this.visitClock?.expired){
+      this.menu.show(parkText.jayName,sunnyDayText.headHomeReminder,[{label:parkText.close,run:close}]);return;
+    }
     if(id==='bench')this.menu.show(parkText.objects.bench,parkText.bench,[{
       label:parkText.sit,run:()=>{
         this.restPosition={x:this.player.x,y:this.player.y};this.resting=true;
@@ -87,6 +126,7 @@ export class ParkScene extends StreetScene {
   }
   update(_time,delta=1000/60){
     if(!this.controls)return;
+    this.updateParkVisit();
     const pressed=this.controls.consumeInteraction();
     if(Phaser.Input.Keyboard.JustDown(this.controls.keys.C))this.toggleDebug();
     const busy=this.menu.open||this.resting||this.physics.world.isPaused||document.hidden||!document.hasFocus();

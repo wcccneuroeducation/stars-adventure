@@ -8,7 +8,7 @@ import { footballHydrationEffects,footballSpeed } from './hydrationEffects.js';
 
 export class FootballActivity {
   constructor(scene){
-    this.scene=scene;this.model=new FootballModel();
+    this.scene=scene;this.model=new FootballModel();this.resting=false;
     this.ball=scene.add.graphics().setDepth(15).setVisible(false);
     this.target=scene.add.graphics().setDepth(5).setVisible(false);
     const b=config.bounds,y=config.ballStart.y-config.goalHalfHeight;
@@ -21,17 +21,22 @@ export class FootballActivity {
     this.leaveButton=document.createElement('button');this.leaveButton.type='button';this.leaveButton.textContent=text.leave;this.leaveButton.hidden=true;
     this.leaveButton.addEventListener('click',()=>this.stop());
     scene.hydrationHud.element.querySelector('.status-actions').append(this.leaveButton);
-    this.onClose=()=>{if(this.model.awaitingChoice)this.stop();};
+    this.restButton=document.createElement('button');this.restButton.type='button';this.restButton.textContent=text.rest;this.restButton.hidden=true;
+    this.restButton.addEventListener('click',()=>this.takeRest());
+    scene.hydrationHud.element.querySelector('.status-actions').append(this.restButton);
+    this.onClose=()=>{if(this.model.awaitingChoice||this.resting)this.stop();};
     scene.menu.element.addEventListener('close',this.onClose);
     scene.events.once('shutdown',()=>{
-      this.model.stop();scene.hydrationRateMultiplier=1;
-      this.leaveButton.remove();this.scoreElement.remove();scene.waitingFriends?.setVisible(true);scene.menu.element.removeEventListener('close',this.onClose);
+      this.model.stop();this.resting=false;scene.hydrationRateMultiplier=1;
+      this.leaveButton.remove();this.restButton.remove();this.scoreElement.remove();scene.waitingFriends?.setVisible(true);scene.menu.element.removeEventListener('close',this.onClose);
     });
   }
-  get active(){return this.model.active;}
+  get active(){return this.model.active&&!this.resting;}
   get speed(){return footballSpeed(this.scene.state);}
   get inKickoff(){return this.active&&this.model.resetDelay>0;}
   start(){
+    if(this.scene.visitClock?.expired)return false;
+    if(this.resting){this.resume();return;}
     if(this.active)return;
     const s=this.scene;this.returnPosition={x:s.player.x,y:s.player.y};
     if(s.state.hydration<=config.stopThreshold){this.showLow();return;}
@@ -40,21 +45,63 @@ export class FootballActivity {
     s.player.body.reset(config.start.x,config.start.y);
     this.lastPlayerPosition={x:config.start.x,y:config.start.y+10};this.seenReset=this.model.resetSerial;
     s.hydrationMovement.reset();s.hydrationRateMultiplier=config.hydrationMultiplier;
-    this.leaveButton.hidden=false;this.ball.setVisible(true);this.target.setVisible(true);
+    this.leaveButton.hidden=false;this.restButton.hidden=false;this.ball.setVisible(true);this.target.setVisible(true);
     this.teams.setVisible(true);this.scoreElement.hidden=false;this.lastScore=null;this.thoughtMs=0;
     s.waitingFriends?.setVisible(false);this.checkHydration();
     s.prompt.setVisible(false);document.querySelector('#hint').textContent=text.hint;
     this.draw();
   }
   stop(){
-    if(!this.active)return;
-    const s=this.scene;this.model.stop();s.player.setVelocity(0);
+    if(!this.model.active&&!this.resting)return;
+    const s=this.scene;this.model.stop();this.resting=false;s.player.setVelocity(0);
     s.physics.world.setBounds(0,0,PARK.width,PARK.height);
     s.player.body.reset(this.returnPosition.x,this.returnPosition.y);
     s.controls.reset();s.hydrationMovement.reset();s.hydrationRateMultiplier=1;
-    this.leaveButton.hidden=true;this.ball.setVisible(false);this.target.setVisible(false);
+    this.leaveButton.hidden=true;this.restButton.hidden=true;this.ball.setVisible(false);this.target.setVisible(false);
     this.teams.setVisible(false);this.scoreElement.hidden=true;this.thought.setVisible(false);s.waitingFriends?.setVisible(true);
     s.nearId=undefined;
+  }
+  pauseForRest(){
+    if(this.resting)return;
+    const s=this.scene;
+    this.restFieldPosition=this.model.active?{x:s.player.x,y:s.player.y}:null;
+    this.resting=true;s.player.setVelocity(0);
+    s.physics.world.setBounds(0,0,PARK.width,PARK.height);
+    if(this.returnPosition)s.player.body.reset(this.returnPosition.x,this.returnPosition.y);
+    s.controls.reset();s.hydrationMovement.reset();s.hydrationRateMultiplier=1;
+    this.restButton.hidden=true;this.teams.setVisible(false);this.ball.setVisible(false);this.target.setVisible(false);this.scoreElement.hidden=true;this.thought.setVisible(false);
+    s.waitingFriends?.setVisible(true);
+  }
+  takeRest(water=false){
+    if(this.scene.visitClock?.expired){this.stop();this.scene.menu.close();return;}
+    this.pauseForRest();this.showRest();
+    if(water)this.openRestBackpack();
+  }
+  showRest(){
+    const s=this.scene;
+    s.menu.show(text.restTitle,text.restMessage+'\n\n'+text.safety,[
+      {label:text.resume,disabled:s.state.hydration<=config.stopThreshold||s.visitClock?.expired,run:()=>this.resume()},
+      {label:text.backpack,run:()=>this.openRestBackpack()},
+      {label:text.leave,run:()=>{this.stop();s.menu.close();}},
+      {label:text.tellAdult,run:()=>this.showAdult()}
+    ]);
+  }
+  openRestBackpack(){
+    const s=this.scene;
+    openBackpack(s.menu,s.state,()=>s.hydrationHud.render(),()=>this.showRest());
+  }
+  resume(){
+    const s=this.scene;
+    if(s.visitClock?.expired){this.stop();s.menu.close();return;}
+    if(s.state.hydration<=config.stopThreshold){this.showRest();return;}
+    if(!this.model.active){this.stop();s.menu.close();this.start();return;}
+    if(this.model.awaitingChoice)this.model.continuePlaying();
+    const b=config.bounds;s.physics.world.setBounds(b.x,b.y,b.width,b.height);
+    s.player.body.reset(this.restFieldPosition.x,this.restFieldPosition.y);
+    this.lastPlayerPosition={x:this.restFieldPosition.x,y:this.restFieldPosition.y+10};
+    this.resting=false;s.controls.reset();s.hydrationMovement.reset();s.hydrationRateMultiplier=config.hydrationMultiplier;
+    this.leaveButton.hidden=false;this.restButton.hidden=false;this.ball.setVisible(true);this.target.setVisible(true);this.teams.setVisible(true);this.scoreElement.hidden=false;s.waitingFriends?.setVisible(false);
+    s.menu.close();this.draw();
   }
   recordMovement(ms){
     if(!this.active)return;
@@ -71,11 +118,12 @@ export class FootballActivity {
     if(effect){this.thought.setText(text[effect]).setVisible(true);this.thoughtMs=5000;}
   }
   showLow(){
-    this.stop();
+    this.pauseForRest();
     this.scene.menu.show(text.title,text.low+'\n\n'+text.gameRule+'\n\n'+text.safety,[
-      {label:text.tellJay,run:()=>this.finishWithReply(text.restReply)},
+      {label:text.rest,run:()=>this.takeRest()},
+      {label:text.water,run:()=>this.takeRest(true)},
       {label:text.tellAdult,run:()=>this.showAdult()},
-      {label:text.close,run:()=>this.scene.menu.close()}
+      {label:text.close,run:()=>{this.stop();this.scene.menu.close();}}
     ]);
   }
   showAdult(){
@@ -84,8 +132,8 @@ export class FootballActivity {
   showSymptom(){
     const s=this.scene;
     s.menu.show(text.title,(this.model.eventCount===1?text.first:text.continuing)+'\n\n'+text.explanation+(this.model.eventCount>1?'\n\n'+text.safety:''),[
-      {label:text.rest,run:()=>this.finishWithReply(text.restReply)},
-      {label:text.water,run:()=>this.finishWithReply(text.waterReply,true)},
+      {label:text.rest,run:()=>this.takeRest()},
+      {label:text.water,run:()=>this.takeRest(true)},
       {label:text.continue,run:()=>{this.model.continuePlaying();s.controls.reset();s.hydrationMovement.reset();s.menu.close();}}
     ]);
   }

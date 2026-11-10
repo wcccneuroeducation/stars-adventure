@@ -139,6 +139,28 @@ For clinical review of the editable script, see [Alder Hey's exercise informatio
 
 Tests cover contacts for all four actors, direction changes, cooldown/stalled-ball recovery, both goal lines, single score awards, kickoff and script persistence, support AI bounds, one-time thoughts, reduced speed and critical support, plus the existing bottle/park/scene regressions. Real headless Edge checks exercise the live score, kickoffs, threshold crossings, drinking/rest, support dialogs and native landscape touch movement/kicking. Physical iPad/Safari testing remains outstanding. The AI is deliberately simple: no tactical passing, tackling, goalkeepers, offside or realistic character physics. Scores are local to one match; choices and scores are not stored in a database. Run `npm test` with Node installed.
 
+## Complete A Sunny Day adventure
+
+The park visit now ends naturally with Jay's goodbye and the objective **Head home**. Walk back through the southern park gate, return to Birmingham Street, then enter the front door of the leftmost home (the original doorstep spawn). Home shows the welcome and **Adventure Complete!**. **Play Again** starts the opening call again with empty inventory, 100% hydration, fresh bottle pickups, reset football thoughts/score and fresh scenario progress. **Finish** stays on a completion screen. Returning home after an early park departure also completes the adventure; players are free to leave early.
+
+`src/settings/scenario.js` configures `parkVisitMs` (120000). `src/scenarios/ParkVisitClock.js` is a single scene-owned clock sampled from the park update loop, without intervals or visible UI. Entry starts a fresh visit; shutdown cancels it. Football, menus, drinking, dialogue and rest continue counting. Explicit Pause, scene/game pauses and document inactivity suspend it without catch-up. Expiry stops football immediately and waits for an open interaction/rest to finish before showing Jay's goodbye once. Football cannot restart for that visit. Re-entry starts a fresh full visit and allows football again.
+
+Football now has a voluntary **Take a Rest** button, also offered by symptom/low-status choices. The player moves safely beside the MUGA; play and exertion stop without restoring hydration. The break menu offers backpack/drinking, resume, leave and trusted-adult advice. Resume retains the current score and independent scripted activity progress; it is unavailable at the existing low-status stop threshold or after the visit ends. Rest and water do not guarantee that concerning symptoms have resolved. The independent scripted event remains separate from hydration, so maintaining hydration does not suppress that discussion event.
+
+New implementation files are the clock/settings above. `ParkScene` owns visit lifecycle and the ending; `FootballActivity` owns break/resume and stopped movement; `StreetScene`/`world.js` add the existing home's door zone without changing geometry. `BedroomScene` owns completion/restart. Shared scenario state and editable `sunnyDayText.js`/`footballText.js` hold progress and dialogue. HUD, backpack and dialog helpers support the objective, return-to-break navigation and static completion screen.
+
+### End-to-end checks
+
+1. Run locally as above and hard-refresh. Leave the bedroom with or without water, enter the park and check there is no visible timer. Walk, drink, talk and rest; these must not restart or pause the visit. Only explicit Pause or switching away should suspend it.
+2. Join football. Use **Take a Rest**, check unchanged hydration, open Backpack and drink, then resume with the same score. Try the scripted symptom choices and trusted-adult advice. Existing movement, goals, NPCs and touch controls should continue working.
+3. Stay in the park for roughly two active minutes. If playing, the match stops. If a menu is open, finish it first. Jay says goodbye once, **Head home** appears and Jay no longer offers a new game. Explore and return through the gate.
+4. Check the pavement spawn, preserved inventory/sips/hydration, and **Head home**. Walk to the original leftmost doorstep and interact. Test both completion choices on separate runs. Play Again must replay the call with all adventure state reset; collecting water again gives 4/4 sips.
+5. Leave and re-enter the park several times: each visit gets its own full duration. Try keyboard and landscape touch controls, including rest/backpack navigation and completion buttons.
+
+Verification for this change: 64 automated Node tests pass. Real headless Edge/Phaser testing covered the full default two-minute visit, deferred goodbye during rest, voluntary rest/drink/resume with preserved score, explicit pause, repeated park entries with stable listener/HUD counts, active-match expiry, the actual walking route home, Play Again and Finish. Browser console errors were absent in these checks. Physical iPad/Safari validation remains necessary. The clock is deliberately not saved across reloads or visits.
+
+The earlier football guide's description of rest ending a match is superseded by the resumable break above; **Leave football** still ends the match. Reloading and Play Again both start a new adventure.
+
 ## GitHub Pages after review
 
 After reviewing and committing the files, use **Settings → Pages → Deploy from a branch**, select the desired branch and **/ (root)**. Paths are relative and work under a repository URL. No build configuration is needed. This task does not commit or push changes.

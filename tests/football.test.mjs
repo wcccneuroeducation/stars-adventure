@@ -87,6 +87,7 @@ test('all three tiredness choices work and a later prompt offers stopping again'
     const {activity,scene}=activityFixture();activity.start();activity.recordMovement(35000);
     assert.ok(scene.menu.message.startsWith(copy.first));assert.equal(scene.menu.options.length,3);
     scene.menu.options.find(action=>action.label===copy[choice]).run();
+    if(choice==='water')scene.menu.options.find(action=>action.label==='Close').run();
     if(choice==='continue'){
       assert.equal(activity.active,true);activity.recordMovement(10000);
       assert.ok(scene.menu.message.startsWith(copy.continuing));assert.ok(scene.menu.message.includes(copy.safety));
@@ -96,6 +97,26 @@ test('all three tiredness choices work and a later prompt offers stopping again'
     assert.equal(scene.state.hydration,100);assert.deepEqual(scene.state.inventory,[]);
     scene.events.emit('shutdown');
   }
+});
+
+test('voluntary rest preserves score, pauses play, and supports resuming or leaving',()=>{
+  const {activity,scene}=activityFixture();activity.start();activity.model.score.blue=2;
+  activity.model.movementMs=12000;
+  const saved=JSON.stringify(scene.state);activity.takeRest();
+  assert.equal(activity.active,false);assert.equal(activity.resting,true);assert.equal(scene.hydrationRateMultiplier,1);
+  assert.ok(scene.menu.message.startsWith(copy.restMessage));assert.equal(scene.player.x,1100);
+  activity.recordMovement(5000);assert.equal(activity.model.movementMs,12000);
+  activity.resume();assert.equal(activity.active,true);assert.equal(activity.resting,false);
+  assert.equal(activity.model.score.blue,2);assert.equal(activity.model.movementMs,12000);
+  assert.equal(scene.hydrationRateMultiplier,config.hydrationMultiplier);assert.equal(JSON.stringify(scene.state),saved);
+  activity.takeRest();activity.stop();assert.equal(activity.model.active,false);assert.equal(activity.resting,false);
+});
+
+test('expired visits cannot restart or resume football and stop actor velocities',()=>{
+  const {activity,scene}=activityFixture();activity.start();activity.takeRest();
+  scene.visitClock={expired:true};activity.resume();assert.equal(activity.active,false);assert.equal(activity.resting,false);
+  activity.start();assert.equal(activity.active,false);
+  assert.equal(activity.model.ball.vx,0);assert.ok(activity.model.npcs.every(n=>n.vx===0&&n.vy===0));
 });
 
 test('closing the symptom dialog leaves the activity instead of forcing a choice',()=>{

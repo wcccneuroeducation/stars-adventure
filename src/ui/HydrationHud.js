@@ -1,5 +1,6 @@
 import { hydrationColour } from '../mechanics/hydration.js';
 import { streetText as text } from '../scenarios/streetText.js';
+import { sunnyDayText } from '../scenarios/sunnyDayText.js';
 
 export class HydrationHud {
   constructor(scene, state, { onBackpack, onPause } = {}) {
@@ -22,11 +23,17 @@ export class HydrationHud {
       button.addEventListener('click',run);actions.append(button);
     }
     this.element.append(actions);
+    this.objectiveElement=document.createElement('span');this.objectiveElement.className='adventure-objective';
+    this.element.append(this.objectiveElement);
     document.querySelector('#game').before(this.element);
     scene.events.once('shutdown',()=>this.element.remove());
     this.render();
   }
   render() {
+    if(this.objectiveElement){
+      const objective=this.state.objective||'explore';
+      if(this.lastObjective!==objective){this.objectiveElement.textContent=sunnyDayText.objectiveLabel(sunnyDayText.objectives[objective]);this.lastObjective=objective;}
+    }
     const value=this.state.hydration, displayed=Math.ceil(value);
     if(this.lastValue===value)return;
     this.lastValue=value;

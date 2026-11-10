@@ -3,6 +3,7 @@ export class SceneDialog {
   constructor(scene, controls) {
     this.scene = scene;
     this.controls = controls;
+    this.destroyed=false;
     this.element = document.createElement('dialog');
     this.element.className = 'scenario-dialog';
     this.element.setAttribute('aria-labelledby', 'scenario-dialog-title');
@@ -10,6 +11,7 @@ export class SceneDialog {
       if (this.required) event.preventDefault();
     });
     this.element.addEventListener('close', () => {
+      if(this.destroyed)return;
       this.controls.reset();
       this.scene.input.keyboard.enabled = true;
       this.scene.input.keyboard.addCapture(['W','A','S','D','UP','DOWN','LEFT','RIGHT','E','C']);
@@ -42,10 +44,13 @@ export class SceneDialog {
     this.element.append(buttons);
     if (!this.open) this.element.showModal();
     // Explicit focus also handles the second page of an already-open call.
-    (content?.querySelector('select') || buttons.querySelector('button:not(:disabled)')).focus();
+    const focusTarget=content?.querySelector('select') || buttons.querySelector('button:not(:disabled)');
+    if(focusTarget)focusTarget.focus();
+    else {this.element.tabIndex=-1;this.element.focus();}
   }
   close() { this.element.close(); }
   destroy() {
+    this.destroyed=true;
     this.controls.reset();
     this.scene.input.keyboard.enabled = true;
     this.element.remove();
