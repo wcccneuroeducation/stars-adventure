@@ -189,6 +189,20 @@ Files: `PharmacyScene.js` reuses Controls, SceneDialog, HydrationHud and backpac
 
 Review checklist: enter from Willow Lane, explore both sides of the public area, try walking into shelves/counter/chairs, speak to the pharmacist, inspect the robot workspace, then exit and re-enter several times. Test keyboard and touchscreen interaction, backpack and Pause. Visit while the objective is **Head home**, then return to the original house and check the personalised completion still works. Hard-refresh before testing to load the new modules/art. Physical iPad/Safari verification remains necessary. No medication mini-game, robot malfunction, consultation interior or personalised medicine advice is implemented.
 
+## Adventure 2 opening — A Cold Morning
+
+Use the two adventure links above the game, or open `?adventure=2` to test **Pharmacy Panic!** directly (`?adventure=1` starts **A Sunny Day**). Choosing a link starts a new run. Adventure 1's completion **Next Adventure** now starts Adventure 2 in the same game, with fresh inventory, hydration and opening call; it no longer shows the placeholder. The two adventures have separate registry records and share existing movement, maps, controls and inventory mechanics.
+
+Adventure 2 begins with the pharmacy's two-line call and the objective **Collect your prescription from Willow Lane Pharmacy.** The existing wardrobe offers T-shirt, jumper, warm coat, or warm coat and hat. Leaving without changing clothes or collecting water is allowed. The first departure records bottle/hat contents and warm clothing; drinking and lowest hydration are recorded across scenes for later advice. No clothing penalty or cold-exposure health meter exists.
+
+The outdoor maps use separate cached winter textures: frosted grass/roofs and winter evergreen foliage with cooler colours. Sunny source textures are preserved. No snow physics, slipping or breath animation is added. `settings/coldMorning.js` sets walking depletion to 35% of the sunny rate; all existing movement/idle/menu/indoor guards and four-sip drinking rules still apply. Exploring the park in Adventure 2 does not start Adventure 1's park-ending sequence or overwrite the prescription objective.
+
+At the pharmacy, speak to the pharmacist at the counter. The three editable lines end with **That's strange... MED-BOT isn't behaving properly today!** The player can continue exploring or exit, but there is no robot malfunction, sorting game, prescription completion or Adventure 2 ending yet.
+
+Key files: `scenarios/coldMorningText.js` (all opening/wardrobe/pharmacist copy), `settings/coldMorning.js`, `pixel/winter.js`, adventure state in `sunnyDayState.js`, and small scenario branches in BedroomScene, PharmacyScene, ParkScene, the outdoor renderers, hydration/HUD/backpack and main.js. `tests/cold-morning.test.mjs` covers isolated state, wardrobe/departure records, slower movement-only depletion, drinking/minimum tracking, phone/dialogue and cached winter rendering. The completion regression now checks that Next Adventure starts Adventure 2.
+
+Verified with 77 automated tests and real browser checks: direct Adventure 2 start, both phone lines, warm clothing and lighter-clothing departure, water pickup/drinking, the complete keyboard walk from the original house to the pharmacy, all three pharmacist lines, preserved objective/state, Next Adventure transition, optional park exploration and restoring the sunny map for Adventure 1. No browser errors were observed. Physical iPad/Safari testing remains necessary. Hard-refresh before testing.
+
 ## GitHub Pages after review
 
 After reviewing and committing the files, use **Settings → Pages → Deploy from a branch**, select the desired branch and **/ (root)**. Paths are relative and work under a repository URL. No build configuration is needed. This task does not commit or push changes.

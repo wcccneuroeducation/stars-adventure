@@ -65,7 +65,7 @@ test('front-door zone is reachable outside the original house collision boundary
   const x=208,y=368;assert.ok(x>=homeZone.x&&x<homeZone.x+homeZone.width&&y+10>=homeZone.y&&y+10<homeZone.y+homeZone.height);
   assert.ok(!obstacles.some(r=>x-9<r.x+r.width&&x+9>r.x&&y+4<r.y+r.height&&y+16>r.y));
 });
-test('homecoming shows three advice boxes once and Next Adventure opens only the placeholder',()=>{
+test('homecoming shows three advice boxes once and Next Adventure starts a fresh second adventure',()=>{
   globalThis.document={createElement:tag=>({tag,children:[],append(child){this.children.push(child);}})};
   const s=new BedroomScene();s.registry=registry();s.state=getSunnyDayState(s.registry);collectItem(s.state,'water');
   s.state.waterSips=1;s.state.hydration=22;s.state.objective='headHome';s.state.hasVisitedPark=true;s.state.callComplete=true;s.state.footballThoughts.thirsty=true;
@@ -73,8 +73,9 @@ test('homecoming shows three advice boxes once and Next Adventure opens only the
   s.dialog={show(title,message,actions,options){Object.assign(this,{title,message,actions,options});},close(){}};s.scene={restart(){s.restarted=true;}};
   s.beginHomecoming();assert.equal(s.dialog.message,text.completeMessage);assert.equal(s.dialog.title,text.completeTitle);assert.equal(s.state.completed,true);
   assert.equal(s.dialog.options.content.children.length,3);assert.deepEqual(s.dialog.actions.map(a=>a.label),[text.nextAdventure]);
-  s.dialog.actions[0].run();assert.equal(s.dialog.message,text.comingSoon);assert.deepEqual(s.dialog.actions,[]);assert.equal(s.restarted,undefined);
-  s.beginHomecoming();assert.equal(s.dialog.message,text.comingSoon);
+  s.dialog.actions[0].run();assert.equal(s.restarted,true);assert.equal(getSunnyDayState(s.registry).adventure,'pharmacyPanic');
+  assert.equal(getSunnyDayState(s.registry).objective,'collectPrescription');assert.equal(getSunnyDayState(s.registry).hydration,100);
+  s.beginHomecoming();assert.equal(s.state.completed,true);
   s.playAgain();
   const fresh=getSunnyDayState(s.registry);assert.equal(s.restarted,true);assert.notEqual(fresh,s.state);assert.equal(fresh.hydration,100);assert.deepEqual(fresh.inventory,[]);assert.equal(fresh.waterSips,0);assert.equal(fresh.callComplete,false);assert.equal(fresh.completed,false);assert.equal(fresh.hasVisitedPark,false);assert.equal(fresh.objective,'explore');assert.deepEqual(fresh.footballThoughts,{thirsty:false,tired:false});
 });

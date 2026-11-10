@@ -1,6 +1,7 @@
 import { PALETTE as p, pixelRect, createTileSet, tileArea } from '../pixel/tiles.js';
 import { PARK,parkPaths,parkTrees,parkFences,flowerbeds,seating,fountain,muga,friends } from './layout.js';
 import { parkText } from '../scenarios/parkText.js';
+import { seasonalTexture } from '../pixel/winter.js';
 
 export function paintPark(ctx) {
   const tiles=createTileSet(),r=(x,y,w,h,c)=>pixelRect(ctx,x,y,w,h,c);
@@ -85,7 +86,7 @@ export function drawPark(scene) {
     const texture=scene.textures.createCanvas(key,PARK.width,PARK.height);
     const ctx=texture.getContext();ctx.imageSmoothingEnabled=false;paintPark(ctx);texture.refresh();
   }
-  scene.add.image(0,0,key).setOrigin(0);
+  scene.add.image(0,0,seasonalTexture(scene,key)).setOrigin(0);
   // Only add a back view for looking into the park; existing player art is intact.
   if(!scene.textures.exists('player-back')){
     const back=scene.textures.createCanvas('player-back',32,32),c=back.getContext();

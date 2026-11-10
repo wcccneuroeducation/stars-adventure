@@ -9,7 +9,7 @@ export function fountainActions(state, onChange, onClose) {
     label:hasBottle?parkText.refill:parkText.directDrink,
     run:()=>{
       if(hasBottle)refillWaterBottle(state);
-      else state.hydration=clampHydration(state.hydration+hydrationSettings.drinkAmount);
+      else {state.hydration=clampHydration(state.hydration+hydrationSettings.drinkAmount);state.drankWater=true;}
       onChange();onClose();
     }
   },{label:parkText.decline,run:onClose}];

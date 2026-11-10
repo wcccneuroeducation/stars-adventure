@@ -10,14 +10,16 @@ import { SceneDialog } from './ui/SceneDialog.js';
 import { setBedroomChrome } from './ui/sceneChrome.js';
 import { HydrationHud } from './ui/HydrationHud.js';
 import { inventoryItemLabel } from './ui/backpack.js';
+import { coldMorningText } from './scenarios/coldMorningText.js';
+const sunnyText=()=>text;
 
 export class BedroomScene extends Phaser.Scene {
   constructor() { super('Bedroom'); }
   create(data={}) {
     this.completing=false;
     document.querySelector('#status')?.remove();
-    setBedroomChrome(text);
     this.state = getSunnyDayState(this.registry);
+    setBedroomChrome(this.state.adventure==='pharmacyPanic'?coldMorningText:text);
     this.hydrationHud = new HydrationHud(this,this.state);
     if (!this.textures.exists('player')) createTextures(this);
     this.items = drawBedroom(this);
@@ -49,7 +51,7 @@ export class BedroomScene extends Phaser.Scene {
       debugButton.setAttribute('aria-pressed','false');
     });
     this.nearId = undefined;
-    if(data.returnHome&&this.state.hasVisitedPark)this.beginHomecoming();
+    if(this.state.adventure!=='pharmacyPanic'&&data.returnHome&&this.state.hasVisitedPark)this.beginHomecoming();
     else if (!this.state.callComplete) this.startCall();
     else document.querySelector('#game').focus({preventScroll:true});
   }
@@ -67,14 +69,15 @@ export class BedroomScene extends Phaser.Scene {
       content.append(box);
     });
     this.dialog.show(text.completeTitle,text.completeMessage,[
-      {label:text.nextAdventure,run:()=>this.dialog.show(text.completeTitle,text.comingSoon,[],{required:true})}
+      {label:text.nextAdventure,run:()=>this.playAgain('pharmacyPanic')}
     ],{required:true,content});
   }
-  playAgain(){
-    this.controls.reset();this.player.setVelocity(0);startNewAdventure(this.registry);
+  playAgain(adventure='sunnyDay'){
+    this.controls.reset();this.player.setVelocity(0);startNewAdventure(this.registry,adventure);
     this.dialog.close();this.scene.restart();
   }
   startCall() {
+    const text=this.state.adventure==='pharmacyPanic'?coldMorningText:sunnyText();
     this.ring.start();
     this.ringText=this.add.text(326,169,text.ringing,{fontFamily:'monospace',fontSize:10,color:'#ffe4a2',backgroundColor:'#294347',padding:{x:4,y:3}}).setOrigin(.5).setDepth(20);
     this.ringTween=this.tweens.add({targets:this.ringText,alpha:.25,duration:450,yoyo:true,repeat:-1});
@@ -90,6 +93,7 @@ export class BedroomScene extends Phaser.Scene {
     show();
   }
   interact(id) {
+    const text=this.state.adventure==='pharmacyPanic'?coldMorningText:sunnyText();
     const title=text.objects[id];
     const close={label:text.close,run:()=>this.dialog.close()};
     if(id==='window') this.dialog.show(title,text.window,[close]);
@@ -122,6 +126,7 @@ export class BedroomScene extends Phaser.Scene {
     document.querySelector('#debug').setAttribute('aria-pressed',String(visible));
   }
   update() {
+    const text=this.state?.adventure==='pharmacyPanic'?coldMorningText:sunnyText();
     if(!this.controls)return;
     const pressed=this.controls.consumeInteraction();
     if(Phaser.Input.Keyboard.JustDown(this.controls.keys.C))this.toggleDebug();

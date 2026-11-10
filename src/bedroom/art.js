@@ -29,7 +29,8 @@ export function drawBedroom(scene) {
     r(700,440,4,40,'#e5cca0');r(768,440,4,40,'#e5cca0');
     // Clear sky, rooftops and sun behind an upright sash window.
     r(436,49,88,47,'#395e64');r(440,51,80,42,p.cream);r(445,54,70,35,'#8fc9d2');
-    r(487,57,14,14,'#ffe09a');r(484,60,20,8,'#ffe09a');
+    if(scene.state.adventure==='pharmacyPanic')r(445,54,70,35,'#c2d3db');
+    else {r(487,57,14,14,'#ffe09a');r(484,60,20,8,'#ffe09a');}
     r(445,83,70,6,'#8fac72');r(449,80,20,6,p.slate);r(504,79,11,7,p.brick);
     r(478,54,3,35,p.cream);r(445,71,70,3,p.cream);r(435,91,90,5,'#ead5aa');
     r(425,48,10,48,'#c58064');r(525,48,10,48,'#c58064');

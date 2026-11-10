@@ -9,12 +9,14 @@ import { SceneDialog } from './ui/SceneDialog.js';
 import { HydrationHud } from './ui/HydrationHud.js';
 import { openBackpack } from './ui/backpack.js';
 import { setBedroomChrome } from './ui/sceneChrome.js';
+import { coldMorningText } from './scenarios/coldMorningText.js';
 
 export class PharmacyScene extends Phaser.Scene{
   constructor(){super('Pharmacy');}
   create(){
     document.querySelector('#status')?.remove();setBedroomChrome(text);
     this.state=getSunnyDayState(this.registry);this.transitioning=false;this.nearId=undefined;
+    if(this.state.adventure==='pharmacyPanic'){this.state.pharmacyArrived=true;this.state.objective='collectPrescription';}
     if(!this.textures.exists('player'))createTextures(this);drawPharmacy(this);
     this.physics.world.setBounds(32,32,896,704);
     const solids=this.physics.add.staticGroup();
@@ -43,10 +45,11 @@ export class PharmacyScene extends Phaser.Scene{
       this.transitioning=true;this.controls.reset();this.player.setVelocity(0);this.scene.start('BirminghamStreet',{entry:'pharmacy'});
     }
     if(id==='pharmacist'){
+      const greeting=this.state.adventure==='pharmacyPanic'?coldMorningText.pharmacist:text.greeting;
       let page=0;
-      const show=()=>this.menu.show(text.pharmacist,text.greeting[page],[{
-        label:page===text.greeting.length-1?text.close:text.continue,
-        run:()=>{if(++page<text.greeting.length)show();else this.menu.close();}
+      const show=()=>this.menu.show(text.pharmacist,greeting[page],[{
+        label:page===greeting.length-1?text.close:text.continue,
+        run:()=>{if(++page<greeting.length)show();else {if(this.state.adventure==='pharmacyPanic')this.state.introFinished=true;this.menu.close();}}
       }]);show();
     }
   }

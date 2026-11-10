@@ -1,14 +1,17 @@
 import { hydrationSettings } from '../settings/hydration.js';
 import { BOTTLE_CAPACITY } from '../mechanics/waterBottle.js';
 const KEY = 'kickstart.sunnyDay';
+const COLD_KEY='kickstart.pharmacyPanic';
 export const ITEM_IDS = ['water', 'hat'];
 
 // Phaser's registry outlives individual scenes. A page reload starts a new run.
 export function getSunnyDayState(registry) {
-  if (!registry.has(KEY)) {
-    startNewAdventure(registry);
+  const adventure=registry.get('kickstart.activeAdventure')??'sunnyDay';
+  const key=adventure==='pharmacyPanic'?COLD_KEY:KEY;
+  if (!registry.has(key)) {
+    startNewAdventure(registry,adventure);
   }
-  const state = registry.get(KEY);
+  const state = registry.get(key);
   // Compatibility with a run created before the hydration mechanic existed.
   if (state.hydration === undefined) state.hydration = hydrationSettings.initial;
   // Migrate old runs once; an explicitly empty bottle must stay empty.
@@ -19,10 +22,13 @@ export function getSunnyDayState(registry) {
   return state;
 }
 
-export function startNewAdventure(registry) {
+export function startNewAdventure(registry,adventure='sunnyDay') {
   const state = { inventory: [], outfit: 'everyday', callComplete: false, hydration: hydrationSettings.initial, waterSips: 0, footballThoughts:{thirsty:false,tired:false}, objective:'explore',hasVisitedPark:false,completed:false };
   Object.assign(state,{departureItems:null,rested:false,lowestHydration:hydrationSettings.initial});
-  registry.set(KEY, state);
+  Object.assign(state,{adventure,warmClothing:false,wearingHat:false,warmClothingOnDeparture:null,drankWater:false,pharmacyArrived:false,introFinished:false});
+  if(adventure==='pharmacyPanic')state.objective='collectPrescription';
+  registry.set('kickstart.activeAdventure',adventure);
+  registry.set(adventure==='pharmacyPanic'?COLD_KEY:KEY, state);
   return state;
 }
 
@@ -36,10 +42,12 @@ export function collectItem(state, id) {
 // Snapshot the first departure, so later home visits cannot change the advice.
 export function recordHomeDeparture(state){
   state.departureItems ??= [...state.inventory];
+  state.warmClothingOnDeparture ??= Boolean(state.warmClothing);
 }
 
 export function chooseOutfit(state, id, outfits) {
   if (!outfits.some(outfit => outfit.id === id)) return false;
   state.outfit = id;
+  if(state.adventure==='pharmacyPanic'){state.warmClothing=Boolean(outfits.find(outfit=>outfit.id===id).warm);state.wearingHat=id==='coat-hat';}
   return true;
 }

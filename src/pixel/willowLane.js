@@ -2,6 +2,7 @@ import { WILLOW as lane,willowHouses,willowWalls,willowProps,futureShopPlot } fr
 import { PALETTE as p,createTileSet,tileArea,pixelRect } from './tiles.js';
 import { pixelLabel } from './buildings.js';
 import { paintPharmacyExterior } from '../pharmacy/art.js';
+import { seasonalTexture } from './winter.js';
 
 // Upright houses with a projecting side porch towards the vertical street.
 // No transformed sprites: roofs remain above windows and doors on both sides.
@@ -86,6 +87,6 @@ export function drawWillowLane(scene){
     ctx.imageSmoothingEnabled=false;ctx.translate(-lane.x,-lane.y);paintWillowLane(ctx);texture.refresh();
   }
   // Unreachable land above the original map prevents a blank camera backdrop.
-  scene.add.rectangle(1024,-576,2048,1152,0x78a253).setDepth(-1);
-  scene.add.image(lane.x,lane.y,key).setOrigin(0);
+  scene.add.rectangle(1024,-576,2048,1152,scene.state?.adventure==='pharmacyPanic'?0xb8c8cc:0x78a253).setDepth(-1);
+  scene.add.image(lane.x,lane.y,seasonalTexture(scene,key)).setOrigin(0);
 }

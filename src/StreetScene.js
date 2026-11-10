@@ -18,8 +18,8 @@ export class StreetScene extends Phaser.Scene{
  create(data={}){
   this.wasNear=undefined;
   const spawn=Object.hasOwn(STREET_ENTRIES,data.entry)?STREET_ENTRIES[data.entry]:WORLD.spawn;
-  document.querySelector('#status')?.remove();restoreStreetChrome();if(!this.textures.exists('player'))createTextures(this);drawStreet(this);
   this.state=getSunnyDayState(this.registry);
+  document.querySelector('#status')?.remove();restoreStreetChrome();if(!this.textures.exists('player'))createTextures(this);drawStreet(this);
   this.physics.world.setBounds(WORLD.x,WORLD.y,WORLD.width,WORLD.height);this.solids=this.physics.add.staticGroup();
   obstacles.forEach(r=>this.solids.add(this.add.rectangle(r.x+r.width/2,r.y+r.height/2,r.width,r.height,0xff0000,0)));
   this.shadow=this.add.ellipse(0,0,24,10,0x263d38,.3);

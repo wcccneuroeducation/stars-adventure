@@ -1,6 +1,7 @@
 import { hydrationColour } from '../mechanics/hydration.js';
 import { streetText as text } from '../scenarios/streetText.js';
 import { sunnyDayText } from '../scenarios/sunnyDayText.js';
+import { coldMorningText } from '../scenarios/coldMorningText.js';
 
 export class HydrationHud {
   constructor(scene, state, { onBackpack, onPause } = {}) {
@@ -32,7 +33,7 @@ export class HydrationHud {
   render() {
     if(this.objectiveElement){
       const objective=this.state.objective||'explore';
-      if(this.lastObjective!==objective){this.objectiveElement.textContent=sunnyDayText.objectiveLabel(sunnyDayText.objectives[objective]);this.lastObjective=objective;}
+      if(this.lastObjective!==objective){this.objectiveElement.textContent=sunnyDayText.objectiveLabel(objective==='collectPrescription'?coldMorningText.objective:sunnyDayText.objectives[objective]);this.lastObjective=objective;}
     }
     const value=this.state.hydration, displayed=Math.ceil(value);
     if(this.lastValue===value)return;

@@ -22,11 +22,11 @@ import { scenarioSettings } from './settings/scenario.js';
 export class ParkScene extends StreetScene {
   constructor(){super('Park');}
   create(data={}){
-    this.visitClock=new ParkVisitClock(scenarioSettings.parkVisitMs,data.visitStartedAt??performance.now());
+    this.visitClock=getSunnyDayState(this.registry).adventure==='pharmacyPanic'?null:new ParkVisitClock(scenarioSettings.parkVisitMs,data.visitStartedAt??performance.now());
     this.visitEndingShown=false;this.pendingVisitEnding=false;this.visitPaused=false;
     document.querySelector('#status')?.remove();setParkChrome(parkText);
     this.state=getSunnyDayState(this.registry);this.resting=false;this.nearId=undefined;
-    this.state.hasVisitedPark=true;
+    if(this.state.adventure!=='pharmacyPanic')this.state.hasVisitedPark=true;
     if(!this.textures.exists('player'))createTextures(this);
     drawPark(this);
     this.waitingFriends=drawWaitingFriends(this);
@@ -54,7 +54,7 @@ export class ParkScene extends StreetScene {
     const debug=document.querySelector('#debug'),toggle=()=>this.toggleDebug();
     debug.setAttribute('aria-pressed','false');debug.addEventListener('click',toggle);
     const finishRest=()=>this.finishRest();this.menu.element.addEventListener('close',finishRest);
-    this.installVisitLifecycle();
+    if(this.visitClock)this.installVisitLifecycle();
     this.events.once('shutdown',()=>{
       debug.removeEventListener('click',toggle);debug.setAttribute('aria-pressed','false');
       this.menu.element.removeEventListener('close',finishRest);this.finishRest();
