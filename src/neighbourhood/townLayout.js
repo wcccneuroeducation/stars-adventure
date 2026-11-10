@@ -8,7 +8,8 @@ export const townShops=[
 ].map(shop=>({...shop,zone:{x:shop.entry.x-32,y:352,width:64,height:64},futureScene:null}));
 export const SCHOOL_ROAD={x:3552,y:608,width:160,height:800};
 export const school={x:3808,y:1472,width:480,height:256,
-  entrance:{x:4048,y:1744},zone:{x:4000,y:1728,width:96,height:80},futureScene:null};
+  entrance:{x:4048,y:1744},zone:{x:4000,y:1728,width:96,height:80},
+  returnSpawn:{x:4048,y:1824,facing:'down'},futureScene:'School'};
 export const campus={x:3328,y:1408,width:992,height:704};
 export const schoolHouses=[832,1120].flatMap((y,i)=>[
   {x:3296,y,width:128,height:160,side:'west',variant:i,number:i*2+1},

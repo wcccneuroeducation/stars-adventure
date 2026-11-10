@@ -35,11 +35,11 @@ function streetFixture() {
   return scene;
 }
 
-test('school entrance is an environment-only repeatable message in both existing adventures',()=>{
+test('school entrance enters the environment without changing either existing adventure',()=>{
   for(const objective of ['headHome','findPrescription']){
     const s=streetFixture();s.state.objective=objective;s.schoolZone=school.zone;s.player.x=school.entrance.x;s.player.y=school.entrance.y;
     s.controls.consumeInteraction=()=>true;s.controls.direction=()=>({x:0,y:0});const saved=JSON.stringify(s.state);
-    for(let i=0;i<4;i++){s.update();assert.equal(s.menu.message,townText.schoolSoon);assert.equal(s.destination,undefined);assert.equal(JSON.stringify(s.state),saved);s.menu.actions[0].run();}
+    s.update();assert.equal(s.destination.key,'School');assert.equal(s.menu.open,false);assert.equal(JSON.stringify(s.state),saved);
   }
 });
 

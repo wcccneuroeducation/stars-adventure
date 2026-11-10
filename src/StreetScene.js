@@ -29,6 +29,7 @@ export class StreetScene extends Phaser.Scene{
   this.player=this.physics.add.sprite(spawn.x,spawn.y,'player').setDepth(10).setCollideWorldBounds(true);this.player.body.setSize(18,12).setOffset(7,20);this.physics.add.collider(this.player,this.solids);
   // The unchanged temporary player texture is front-facing (towards screen-down).
   if(spawn.facing==='down')this.player.setFlipX(false);
+  this.player.setData('facing',spawn.facing??'down');
   this.zone=new Phaser.Geom.Rectangle(shopZone.x,shopZone.y,shopZone.width,shopZone.height);
   this.parkZone=new Phaser.Geom.Rectangle(parkZone.x,parkZone.y,parkZone.width,parkZone.height);
   this.homeZone=new Phaser.Geom.Rectangle(homeZone.x,homeZone.y,homeZone.width,homeZone.height);
@@ -133,7 +134,7 @@ export class StreetScene extends Phaser.Scene{
   if(atPharmacy){document.querySelector('#hint').textContent=pharmacyText.exteriorHint;}
   if(atPharmacy&&interact&&!busy){this.player.setVelocity(0);this.controls.reset();this.scene.start('Pharmacy');}
   if(atSchool)document.querySelector('#hint').textContent=townText.schoolPrompt;
-  if(atSchool&&interact&&!busy)this.menu.show(townText.school,townText.schoolSoon,[{label:townText.close,run:()=>this.menu.close()}]);
+  if(atSchool&&interact&&!busy){this.player.setVelocity(0);this.controls.reset();this.scene.start(school.futureScene);}
   if(atBus)document.querySelector('#hint').textContent=trafficText.prompt;
   if(atBus&&interact&&!busy)this.menu.show(trafficText.title,`${trafficText.route}\n\n${trafficText.message}`,[{label:trafficText.close,run:()=>this.menu.close()}]);
   if(this.playerDebug.visible){const b=this.player.body;this.playerDebug.clear().lineStyle(2,0xffe09c).strokeRect(b.x,b.y,b.width,b.height);}

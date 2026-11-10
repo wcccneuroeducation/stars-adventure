@@ -24,7 +24,7 @@ test('four distinctive shop plots retain future door anchors with clear approach
   assert.deepEqual(townShops.map(s=>s.name),['POST OFFICE','FISH & CHIPS','SUPERMARKET','FRUIT & VEG']);
   assert.equal(new Set(townShops.map(s=>s.colour)).size,4);
   for(const s of townShops){assert.equal(s.futureScene,null);walk(s.entry,{x:s.entry.x,y:422});}
-  assert.ok(clear(school.entrance.x,school.entrance.y));assert.equal(school.futureScene,null);
+  assert.ok(clear(school.entrance.x,school.entrance.y));assert.equal(school.futureScene,'School');
 });
 test('existing home, park and pharmacy entries remain unchanged and outside all added solids',()=>{
   assert.deepEqual(STREET_ENTRIES.home,{x:208,y:368,facing:'down'});assert.deepEqual(STREET_ENTRIES.park,{x:1728,y:614,facing:'down'});assert.deepEqual(STREET_ENTRIES.pharmacy,{x:2272,y:-546,facing:'right'});

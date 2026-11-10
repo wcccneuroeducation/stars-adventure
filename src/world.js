@@ -1,7 +1,7 @@
 export const TILE=32;
 import { willowSolids } from './neighbourhood/willowLayout.js';
 import { pharmacyEntry } from './pharmacy/layout.js';
-import { townSolids } from './neighbourhood/townLayout.js';
+import { townSolids,school } from './neighbourhood/townLayout.js';
 export const WORLD={x:0,y:-1152,width:136*TILE,height:104*TILE,spawn:{x:960,y:480}};
 export const BIRMINGHAM={width:64*TILE,height:32*TILE};
 export const houses=[4,9,14,19,24,29,34].flatMap(x=>[5,22].map(y=>({x:x*TILE,y:y*TILE,width:160,height:192})));
@@ -9,6 +9,7 @@ export const houses=[4,9,14,19,24,29,34].flatMap(x=>[5,22].map(y=>({x:x*TILE,y:y
 // Place the sprite just below the doorway, on the open front garden path.
 // Its foot body (y=372..384) is clear of the house, which ends at y=352.
 export const STREET_ENTRIES = {
+  school:school.returnSpawn,
   pharmacy:pharmacyEntry,
   home: { x: houses[0].x+80, y: houses[0].y+houses[0].height+16, facing: 'down' },
   park: { x:1728, y:614, facing:'down' }
