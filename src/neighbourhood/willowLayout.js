@@ -7,7 +7,7 @@ export const willowHouses=[-960,-704,-448,-192,64].flatMap((y,i)=>[
   {x:2080,y,width:128,height:160,side:'west',variant:i%4},
   {x:2560,y,width:128,height:160,side:'east',variant:(i+2)%4}
 ]);
-// An ordinary vacant unit, reserved for a future destination; no interaction.
+// Reserved western unit, now used by the permanent community pharmacy.
 export const futureShopPlot=willowHouses[2];
 export const willowWalls=willowHouses.flatMap(h=>{
   const x=h.side==='west'?2224:2528;

@@ -9,6 +9,8 @@ import { HydrationHud } from './ui/HydrationHud.js';
 import { SceneDialog } from './ui/SceneDialog.js';
 import { openBackpack } from './ui/backpack.js';
 import { sunnyDayText } from './scenarios/sunnyDayText.js';
+import { pharmacyZone } from './pharmacy/layout.js';
+import { pharmacyText } from './scenarios/pharmacyText.js';
 // Temporary diagnostics are disabled after verifying the initial-focus regression.
 const DEBUG_HYDRATION = false;
 export class StreetScene extends Phaser.Scene{
@@ -27,6 +29,9 @@ export class StreetScene extends Phaser.Scene{
   this.zone=new Phaser.Geom.Rectangle(shopZone.x,shopZone.y,shopZone.width,shopZone.height);
   this.parkZone=new Phaser.Geom.Rectangle(parkZone.x,parkZone.y,parkZone.width,parkZone.height);
   this.homeZone=new Phaser.Geom.Rectangle(homeZone.x,homeZone.y,homeZone.width,homeZone.height);
+  this.pharmacyZone=new Phaser.Geom.Rectangle(pharmacyZone.x,pharmacyZone.y,pharmacyZone.width,pharmacyZone.height);
+  this.pharmacyPrompt=this.add.text(2208,pharmacyZone.y,pharmacyText.exteriorPrompt,{fontFamily:'monospace',fontSize:12,color:'#fff0be',backgroundColor:'#294e4b',padding:{x:8,y:7}}).setOrigin(.5).setDepth(12).setVisible(false);
+  if(spawn.facing==='right'){this.player.setFlipX(false);this.player.setData('facing','right');}
   this.homePrompt=this.add.text(208,352,sunnyDayText.homePrompt,{fontFamily:'monospace',fontSize:12,color:'#fff0be',backgroundColor:'#294e4b',padding:{x:8,y:7}}).setOrigin(.5).setDepth(12).setVisible(false);
   this.parkPrompt=this.add.text(1728,640,streetText.parkPrompt,{fontFamily:'monospace',fontSize:12,color:'#fff0be',backgroundColor:'#294e4b',padding:{x:8,y:7}}).setOrigin(.5).setDepth(12).setVisible(false);
   this.prompt=this.add.text(1504,380,'[ E ] VISIT SHOP',{fontFamily:'monospace',fontSize:12,color:'#fff0be',backgroundColor:'#294e4b',padding:{x:10,y:7}}).setOrigin(.5).setDepth(12).setVisible(false);
@@ -34,6 +39,7 @@ export class StreetScene extends Phaser.Scene{
   this.playerDebug=this.add.graphics().setDepth(31).setVisible(false);this.controls=new Controls(this);
   this.debugGraphics.lineStyle(2,0x73efda).strokeRect(parkZone.x,parkZone.y,parkZone.width,parkZone.height);
   this.debugGraphics.strokeRect(homeZone.x,homeZone.y,homeZone.width,homeZone.height);
+  this.debugGraphics.strokeRect(pharmacyZone.x,pharmacyZone.y,pharmacyZone.width,pharmacyZone.height);
   this.dialog=document.querySelector('#shop-dialog');
   this.menu=new SceneDialog(this,this.controls);
   this.hydrationHud=new HydrationHud(this,this.state,{
@@ -101,13 +107,17 @@ export class StreetScene extends Phaser.Scene{
   const near=Phaser.Geom.Rectangle.Contains(this.zone,this.player.x,this.player.y+10);
   const atPark=Phaser.Geom.Rectangle.Contains(this.parkZone,this.player.x,this.player.y+10);
   const atHome=Boolean(this.homeZone)&&Phaser.Geom.Rectangle.Contains(this.homeZone,this.player.x,this.player.y+10);
+  const atPharmacy=Boolean(this.pharmacyZone)&&Phaser.Geom.Rectangle.Contains(this.pharmacyZone,this.player.x,this.player.y+10);
+  this.pharmacyPrompt?.setVisible(atPharmacy&&!busy);
   this.prompt.setVisible(near&&!busy);this.parkPrompt.setVisible(atPark&&!busy);
   this.homePrompt?.setVisible(atHome&&!busy);
-  const location=near?'shop':atPark?'park':atHome?'home':null;
+  const location=near?'shop':atPark?'park':atHome?'home':atPharmacy?'pharmacy':null;
   if(location!==this.wasNear){document.querySelector('#hint').textContent=near?'Corner shop · press E or tap INTERACT':atPark?streetText.parkHint:atHome?sunnyDayText.homeHint:'Explore the street · look for the teal shop sign';this.wasNear=location;}
   if(near&&interact&&!busy){this.player.setVelocity(0);this.controls.reset();this.dialog.showModal();}
   if(atPark&&interact&&!busy){this.player.setVelocity(0);this.controls.reset();this.scene.start('Park',{visitStartedAt:performance.now()});}
   if(atHome&&interact&&!busy){this.player.setVelocity(0);this.controls.reset();this.scene.start('Bedroom',{returnHome:this.state.hasVisitedPark});}
+  if(atPharmacy){document.querySelector('#hint').textContent=pharmacyText.exteriorHint;}
+  if(atPharmacy&&interact&&!busy){this.player.setVelocity(0);this.controls.reset();this.scene.start('Pharmacy');}
   if(this.playerDebug.visible){const b=this.player.body;this.playerDebug.clear().lineStyle(2,0xffe09c).strokeRect(b.x,b.y,b.width,b.height);}
  }
 }

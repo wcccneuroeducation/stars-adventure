@@ -179,6 +179,16 @@ Continue east beyond the existing park and bus stop to the **WILLOW LANE** sign,
 
 Testing: `npm test` includes continuous foot-body routes from home to both pavements and back, every garden entrance, fixed home/park coordinates, and repeated texture-cache reuse. Real browser checks covered keyboard walking north, turning at the end, returning down the opposite pavement, vertical camera follow, the original park entrance and personalised adventure completion. Physical iPad/Safari testing remains necessary. Existing roads remain walkable under the original collision rules; house interiors and the vacant unit are not accessible. No Pharmacy Panic gameplay has been added.
 
+## Willow Lane Pharmacy
+
+The reserved western unit is now a permanent green **PHARMACY**, with large windows, a green cross and its existing side-porch path to the pavement. Approach the entrance and press **E** or tap **INTERACT**. The separate interior has public product shelves, waiting chairs, a consultation door, a rear counter and pharmacist, plus a dispensing workspace with an inactive MED-BOT 3000, conveyor, boxes and five sorting bins. The counter blocks entry to the staff area. The consultation door and robot are decorative, with no gameplay yet.
+
+Walk to the counter in front of the pharmacist to read the three placeholder dialogue pages. Walk to the southern exit door and interact to return to the western pavement at `(2272, -546)`. Entry/exit always requires an interaction; the interior spawn is outside the exit zone. Indoor walking does not drain hydration. Backpack, hydration, bottle sips, current objective and scenario progress share the existing registry. No Pharmacy Panic adventure is started and the existing park clock lifecycle is unchanged.
+
+Files: `PharmacyScene.js` reuses Controls, SceneDialog, HydrationHud and backpack; `pharmacy/layout.js` defines bounds, solids and entrance/exit zones; `pharmacy/art.js` caches the interior and paints the exterior; `scenarios/pharmacyText.js` contains editable dialogue and labels. `main.js` registers the scene. `StreetScene.js`, `world.js` and `pixel/willowLane.js` connect the entrance and appearance. Tests in `tests/pharmacy.test.mjs` cover safe outdoor return, interior routes, solids, dialogue/state preservation and duplicate-exit protection.
+
+Review checklist: enter from Willow Lane, explore both sides of the public area, try walking into shelves/counter/chairs, speak to the pharmacist, inspect the robot workspace, then exit and re-enter several times. Test keyboard and touchscreen interaction, backpack and Pause. Visit while the objective is **Head home**, then return to the original house and check the personalised completion still works. Hard-refresh before testing to load the new modules/art. Physical iPad/Safari verification remains necessary. No medication mini-game, robot malfunction, consultation interior or personalised medicine advice is implemented.
+
 ## GitHub Pages after review
 
 After reviewing and committing the files, use **Settings → Pages → Deploy from a branch**, select the desired branch and **/ (root)**. Paths are relative and work under a repository URL. No build configuration is needed. This task does not commit or push changes.

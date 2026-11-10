@@ -1,6 +1,7 @@
 import { WILLOW as lane,willowHouses,willowWalls,willowProps,futureShopPlot } from '../neighbourhood/willowLayout.js';
 import { PALETTE as p,createTileSet,tileArea,pixelRect } from './tiles.js';
 import { pixelLabel } from './buildings.js';
+import { paintPharmacyExterior } from '../pharmacy/art.js';
 
 // Upright houses with a projecting side porch towards the vertical street.
 // No transformed sprites: roofs remain above windows and doors on both sides.
@@ -57,7 +58,7 @@ export function paintWillowLane(ctx){
     }
     paintLaneHouse(ctx,tiles,h);
     if(h===futureShopPlot){
-      r(h.x+4,h.y+52,88,14,p.teal);pixelLabel(ctx,'VACANT UNIT',h.x+48,h.y+55,9,p.cream);
+      paintPharmacyExterior(ctx,h);
     }
   });
   willowWalls.forEach(w=>{
