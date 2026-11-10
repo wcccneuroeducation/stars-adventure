@@ -13,9 +13,11 @@ export function drinkWater(state) {
 }
 
 export function advanceHydration(state, movementMs, context) {
-  if (!context.outdoors || !context.moving || context.dialogOpen || context.paused || !context.focused) return;
+  if (!context.outdoors || !context.moving || context.dialogOpen || context.paused || !context.focused) return 0;
   const elapsed = Number.isFinite(movementMs) ? Math.max(0, movementMs) : 0;
-  state.hydration = clampHydration(state.hydration - elapsed / 1000 * settings.pointsPerSecond);
+  const multiplier=context.rateMultiplier ?? 1;
+  state.hydration = clampHydration(state.hydration - elapsed / 1000 * settings.pointsPerSecond * multiplier);
+  return elapsed;
 }
 
 // Sample resolved physics positions ONCE PER PHYSICS STEP, using that step's
@@ -27,11 +29,11 @@ export class HydrationMovement {
   sample(x, y, delta, context) {
     const previous = this.previous;
     this.previous = { x, y };
-    if (!previous || !Number.isFinite(delta) || delta <= 0) return;
+    if (!previous || !Number.isFinite(delta) || delta <= 0) return 0;
     const distance = Math.hypot(x - previous.x, y - previous.y);
     // Ignore discontinuities larger than one frame's possible walking distance.
-    if (distance > settings.walkingSpeed * delta / 1000 + 1) return;
+    if (distance > settings.walkingSpeed * delta / 1000 + 1) return 0;
     const movementMs = Math.min(delta, distance / settings.walkingSpeed * 1000);
-    advanceHydration(this.state, movementMs, { ...context, moving: context.moving && distance > 0.001 });
+    return advanceHydration(this.state, movementMs, { ...context, moving: context.moving && distance > 0.001 });
   }
 }

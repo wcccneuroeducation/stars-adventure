@@ -49,13 +49,6 @@ export function paintPark(ctx) {
   for(const t of parkTrees)tree(t.x,t.y);
   // Small flush path details never add collision bodies.
   for(const [x,y] of [[768,1280],[480,864],[960,656],[1280,816]]){r(x,y,16,16,'#b4a57e');r(x+3,y+3,10,10,'#d3c499');}
-  for(const f of friends){
-    const x=f.x-16,y=f.y-16;
-    r(x+7,y+24,6,7,p.ink);r(x+19,y+24,6,7,p.ink);
-    r(x+9,y+5,14,12,f.skin);r(x+8,y+2,16,7,f.hair);r(x+9,y+16,14,10,f.shirt);
-    r(x+5,y+18,4,8,f.skin);r(x+23,y+18,4,8,f.skin);r(x+12,y+10,2,2,p.ink);r(x+20,y+10,2,2,p.ink);
-  }
-  label(parkText.jayName,1088,492,11);
   r(664,1432,64,32,p.teal);label('PARK',696,1441,12);
   r(744,1480,8,24,'#d5bb86');r(848,1480,8,24,'#d5bb86');
   label(parkText.parkSign,800,1520,12,'#e6d8aa');
@@ -67,6 +60,22 @@ export function paintPark(ctx) {
     r(x-22,y-44,38,15,'#7bad58');r(x-34,y-22,23,18,'#82b55b');r(x+12,y-12,24,23,'#417648');
     for(let i=0;i<18;i++)r(x-28+(i*17)%55,y-32+(i*13)%48,4,2,i%2?'#8cba61':'#4d844b');
   }
+}
+
+// Keep the waiting group on a reusable layer so Jay is not duplicated while
+// joining the pitch. The positions and park artwork outside a match are retained.
+export function drawWaitingFriends(scene){
+  const g=scene.add.graphics().setDepth(2);
+  const r=(x,y,w,h,c)=>g.fillStyle(Number(c.replace('#','0x'))).fillRect(x,y,w,h);
+  for(const f of friends){
+    const x=f.x-16,y=f.y-16;
+    r(x+7,y+24,6,7,p.ink);r(x+19,y+24,6,7,p.ink);
+    r(x+9,y+5,14,12,f.skin);r(x+8,y+2,16,7,f.hair);r(x+9,y+16,14,10,f.shirt);
+    r(x+5,y+18,4,8,f.skin);r(x+23,y+18,4,8,f.skin);
+    r(x+12,y+10,2,2,p.ink);r(x+20,y+10,2,2,p.ink);
+  }
+  const label=scene.add.text(1088,492,parkText.jayName,{fontFamily:'monospace',fontSize:11,color:p.cream,fontStyle:'bold'}).setOrigin(.5,0).setDepth(2);
+  return {setVisible(visible){g.setVisible(visible);label.setVisible(visible);}};
 }
 
 export function drawPark(scene) {

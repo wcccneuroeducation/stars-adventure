@@ -71,7 +71,7 @@ With Node installed, run `npm test` (no dependencies to install). Tests cover de
 
 ## Explorable park
 
-`ParkScene` is a separate 1600 × 1536 scene with camera follow, winding connected paths and an eastern loop, trees, flowerbeds, a shaded seating pergola, a drinking fountain and a fenced MUGA. Jay and three friends wait near the MUGA. All art is generated in Canvas using the existing 32px terrain palette. There is no football gameplay, energy/fatigue meter, clinical event, scoring or forced choice.
+`ParkScene` is a separate 1600 × 1536 scene with camera follow, winding connected paths and an eastern loop, trees, flowerbeds, a shaded seating pergola, a drinking fountain and a fenced MUGA. Jay and three friends wait near the MUGA and offer an optional football activity. All art is generated in Canvas using the existing 32px terrain palette. There is no energy/fatigue meter or crisis simulation. Football counts goals; educational choices are not graded.
 
 The park inherits the street's tested `startHydrationTracking`, `updateHydration` and collision-debug toggle, and reuses `Controls`, `SceneDialog`, `HydrationHud`, the shared registry and four-sip backpack. Its `create` and `update` implement its own map and interactions without constructing or modifying the street. Rest adds a guard to pause depletion without restoring hydration. Other menus pause it through the same existing dialog guard.
 
@@ -87,7 +87,7 @@ The park inherits the street's tested `startHydrationTracking`, `updateHydration
 2. Follow the path north, then west, then north. Inspect the flowerbeds and eastern loop. Check camera follow, WASD/arrows, touch movement and **C / Show collisions**. Walk against trees, fence rails, flowerbeds, the bench, fountain and NPCs; movement should stop at their collision boundaries. Gate gaps remain open.
 3. At the shaded pergola beside the western path, interact with the bench. Decline once, then choose **Sit and rest**. Check the seated position and unchanged hydration while resting. Choose **Stand up**, or press Escape, and check that the player returns to their safe approach position and can move again. Walking resumes depletion.
 4. At the fountain on the next path bend, test **Refill Water Bottle** with a partially used or empty bottle. Check 4/4 sips and unchanged hydration. Decline once to check nothing changes. On another new run without a bottle, test **Drink from Fountain**: hydration rises by 25, capped at 100, and the backpack stays bottle-free.
-5. Walk to Jay near the MUGA and interact. Check the exact line: “Hey! You made it! Fancy a game of football?” Close it; no football game starts.
+5. Walk to Jay near the MUGA and interact. Check the exact line: “Hey! You made it! Fancy a game of football?” Choose **Not now** to stay in the park or **Join the game** to try the activity described below.
 6. Return to the southern park gate, decline once, then choose **Return to street**. Check the pavement spawn beside the original park entrance, with hydration, inventory and sips preserved. Re-enter to check there are no duplicate controls, HUDs or hydration listeners.
 7. Repeat on an iPad in landscape, including touch interaction, backpack use and declining menus. Browser/device gameplay validation remains required; automated tests cover the scene methods, collision reachability, state persistence, hydration/rest guards and fountain branches. The procedural full-map preview has been rendered and inspected separately.
 
@@ -100,6 +100,44 @@ Map painting loops are bounded and run only at scene creation. The existing 2048
 Verified with the real browser: Bedroom → Street → Park, followed by 20 Park → Street → Park round trips, with no console errors or warnings. Movement, a blocked fence collision, camera tracking, pointer-operated directional controls, resting, refilling, drinking and post-drink depletion were checked. A used bottle (3 sips) and reduced hydration persisted through the return/re-entry tests. Across repeated visits there were 9 textures, 65 park display objects, 59 static bodies, 1 player body, 1 hydration listener, 1 HUD and 1 scenario dialog. The map textures were not recreated. Garbage-collected JavaScript heap settled near 8.2 MB after warm-up; this is not a measurement of GPU memory or a physical iPad test.
 
 Regression tests now simulate Phaser clearing the world/body before user shutdown callbacks, and check that 20 repeated map visits do not repaint or allocate additional map textures. To verify manually, hard-refresh, follow Bedroom → Street → Park → Street → Park several times, and watch the browser console. Check the return spawn beside the street gate, backpack/sips, hydration and touch controls. Physical iPad/Safari validation remains outstanding.
+
+## Football activity
+
+Interact with Jay and choose **Join the game**. Blue is the player plus Jay; Orange is two NPC opponents. Movement stays on WASD/arrows or the existing touch directional pad. Touch the ball to kick: player movement/contact determines direction, while AI kicks are biased towards the opposing goal. Blue attacks right and Orange attacks left. The HUD shows **Blue 0 – Orange 0**. Only valid goal-mouth crossings score; a brief kickoff resets all four players and the ball. Score resets for a new match, while shared hydration, bottle sips and one-time thought flags persist. Leave with **Leave football** or **E / INTERACT** to return to the park. Backpack and Pause remain available.
+
+`src/football/model.js` owns one ball and four stable actor records. Friction, wall rebounds, swept goal checks, per-character cooldowns, a brief ball lock and contact latches keep contact lightweight. A stopped ball can be kicked again after cooldown so an overlap cannot permanently trap it. One Orange NPC chases at a time; the other holds a defensive/support position. Jay chases when better placed than the player and otherwise supports. Local separation avoids crowding; there is no pathfinding. The activity reuses three Graphics objects and one thought Text object, plus DOM score/leave controls; it creates no Phaser objects inside update and no new physics bodies or independent intervals. Waiting friends are on a hideable layer to avoid a duplicate Jay during a match. The park layout, map cache and solid geometry are unchanged.
+
+`src/settings/football.js` contains bounds, ball/AI tuning, goal/reset settings, fictional status thresholds, a 35-second initial script threshold, a 10-second continuation interval and the 1.25 hydration multiplier. Ordinary walking retains its existing rate. Football uses resolved physics displacement; idle time, blocked movement, menus, kickoffs, pauses and unfocused windows do not advance the exertion timer or drain hydration. Reduced movement speed is accounted for when deriving active seconds for the independent script.
+
+`src/football/hydrationEffects.js` applies these explicitly fictional gameplay rules only in football:
+
+| Game status | Effect |
+| --- | --- |
+| Above 60% | Normal football speed (150px/s) |
+| Above 30% through 60% | One-time thirsty thought; normal speed |
+| Above 10% through 30% | One-time tired thought; football speed reduced 15% to 127.5px/s |
+| 0% through 10% | Stop football and offer telling Jay or a trusted adult, with appropriate-advice wording |
+
+The thought flags persist for the adventure, so drinking and crossing a band again, rejoining or changing scenes does not repeat them. A new adventure resets the flags. Drinking still restores +25 game points and consumes one sip; speed returns to normal above 30%. That is a game-status effect and does not mean real symptoms have resolved. Joining below the stop threshold presents the stop/support dialog rather than restarting play. No score is lost for stopping.
+
+### Scripted discussion and nurse review
+
+All dialogue and labels are editable in `src/scenarios/footballText.js`. The existing independent event remains: after 35 seconds of actual football movement, the activity pauses with “I'm getting really tired. I think I need a break.” The player may tell Jay and stop, stop for water, or continue for another 10 active seconds. Continuing tiredness is then presented with another opportunity to stop and tell Jay. Neither hydration thresholds nor goals trigger/reset this script timer. The separate low-status stop rule may end a match before the timer completes; it is labelled as a fictional game rule. Closing a symptom dialog with Escape leaves the activity.
+
+Stopping does not automatically seat the player, give them water or change hydration. The rest response leaves them free to use the bench, where exertion remains paused without restoring hydration. The water response offers the unchanged backpack/fountain mechanics. Both responses now include an explicit **Tell a trusted adult / seek advice** action. This displays support and personal-care-plan wording; it does not contact anyone. Rest/water are not represented as guaranteed treatment. Fictional status rules and the independent timed script do not diagnose dehydration, predict a crisis or assess an individual's symptoms. A new football session restarts the discussion timer; no symptom severity or cure state is modelled.
+
+For clinical review of the editable script, see [Alder Hey's exercise information for young people with sickle cell disease](https://www.alderhey.nhs.uk/conditions/patient-information-leaflets/living-with-sickle-cell-disease-exercise/) and the [NHS sickle cell disease guidance](https://www.nhs.uk/conditions/sickle-cell-disease/). The game's branching choices are for nurse-guided discussion and should not replace an individual's care plan.
+
+### Football playtest
+
+1. Hard-refresh, reach Jay and decline once; then join. Check four characters, Blue/Orange kit, opposite goals and the score. Approach from different directions to kick. Verify NPC contacts, opposite goal directions and a valid goal at each end. A miss should rebound; a goal should increment once, reset all players/ball and continue the match.
+2. Move actively, then stand still, open Backpack and pause. Only actual football movement should consume hydration/time, at 1.25 times the walking rate. Carrying water/hat has no automatic benefit.
+3. Cross 60% and 30% while moving. Check each thought appears once, and speed reduces only in football at/below 30%. Drink, cross again and rejoin: thoughts should not repeat in the same adventure. Cross 10% to check the stop/support menu, safe park return and no automatic healing. A new page load resets the adventure and thought flags.
+4. Keep game status above the low stop threshold to review the independent 35-second event, then choose **Keep playing for now.** Check the follow-up after 10 more moving seconds. Rest and water choices stop football; try their trusted-adult action. Drinking, rest and goals must not count as a cure or reset the independent timer within a match.
+5. Check **Leave football**, **E / INTERACT**, and Escape during the symptom dialog. Confirm the return position, full park bounds, unchanged inventory/sips and ordinary walking depletion. Repeat joining/leaving and Park → Street → Park to check lifecycle stability.
+6. Repeat using landscape touch controls. Physical iPad/Safari validation remains outstanding.
+
+Tests cover contacts for all four actors, direction changes, cooldown/stalled-ball recovery, both goal lines, single score awards, kickoff and script persistence, support AI bounds, one-time thoughts, reduced speed and critical support, plus the existing bottle/park/scene regressions. Real headless Edge checks exercise the live score, kickoffs, threshold crossings, drinking/rest, support dialogs and native landscape touch movement/kicking. Physical iPad/Safari testing remains outstanding. The AI is deliberately simple: no tactical passing, tackling, goalkeepers, offside or realistic character physics. Scores are local to one match; choices and scores are not stored in a database. Run `npm test` with Node installed.
 
 ## GitHub Pages after review
 

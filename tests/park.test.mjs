@@ -82,10 +82,11 @@ test('direct fountain drinking restores 25 capped at 100 without adding a bottle
   }
 });
 
-test('Jay delivers the exact line without starting football; gate preserves shared state',()=>{
+test('Jay offers joining or declining; declining and the gate preserve shared state',()=>{
   const scene=parkFixture();collectItem(scene.state,'water');scene.state.waterSips=2;scene.state.hydration=57;
   scene.interact('jay');assert.equal(scene.menu.message,"Hey! You made it! Fancy a game of football?");
-  scene.menu.actions[0].run();assert.equal(scene.destination,undefined);
+  assert.equal(scene.menu.actions[0].label,'Join the game');
+  scene.menu.actions[1].run();assert.equal(scene.destination,undefined);
   scene.interact('gate');scene.menu.actions[1].run();assert.equal(scene.destination,undefined);
   scene.interact('gate');scene.menu.actions[0].run();assert.deepEqual(scene.destination,{key:'BirminghamStreet',data:{entry:'park'}});
   const state=getSunnyDayState(scene.registry);assert.equal(state,scene.state);assert.equal(state.hydration,57);assert.equal(state.waterSips,2);assert.deepEqual(state.inventory,['water']);

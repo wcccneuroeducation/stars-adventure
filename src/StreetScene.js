@@ -74,12 +74,12 @@ export class StreetScene extends Phaser.Scene{
   const previous=this.hydrationMovement.previous;
   const distance=previous?Math.hypot(this.player.body.x-previous.x,this.player.body.y-previous.y):0;
   const context={
-   outdoors:true,moving:distance>0.001,dialogOpen:this.dialog.open||this.menu.open,
+   outdoors:true,moving:distance>0.001,dialogOpen:this.dialog.open||this.menu.open,rateMultiplier:this.hydrationRateMultiplier??1,
    // Use the same current browser focus state as movement. Game.hasFocus starts
    // false and is event-driven, so it can be stale on an already-focused page.
    paused:this.game.isPaused||this.physics.world.isPaused||!this.sys.isActive(),focused:!document.hidden&&document.hasFocus()
   };
-  this.hydrationMovement.sample(this.player.body.x,this.player.body.y,delta,context);
+  const movementMs=this.hydrationMovement.sample(this.player.body.x,this.player.body.y,delta,context);
   this.hydrationHud.render();
   if(DEBUG_HYDRATION)console.debug('[hydration]',{
    scene:'BirminghamStreet',delta,body:{x:this.player.body.x,y:this.player.body.y},
@@ -87,6 +87,7 @@ export class StreetScene extends Phaser.Scene{
    ...context,documentFocused:document.hasFocus(),gameHasFocus:this.game.hasFocus,
    before,after:this.state.hydration,skipped:before===this.state.hydration
   });
+  return movementMs;
  }
  toggleDebug(){this.debugGraphics.visible=!this.debugGraphics.visible;this.playerDebug.visible=this.debugGraphics.visible;document.querySelector('#debug').setAttribute('aria-pressed',String(this.debugGraphics.visible));}
  update(){if(!this.controls)return;

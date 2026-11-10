@@ -13,11 +13,12 @@ export function getSunnyDayState(registry) {
   if (state.hydration === undefined) state.hydration = hydrationSettings.initial;
   // Migrate old runs once; an explicitly empty bottle must stay empty.
   if (state.waterSips === undefined) state.waterSips = state.inventory.includes('water') ? BOTTLE_CAPACITY : 0;
+  state.footballThoughts ??= {thirsty:false,tired:false};
   return state;
 }
 
 export function startNewAdventure(registry) {
-  const state = { inventory: [], outfit: 'everyday', callComplete: false, hydration: hydrationSettings.initial, waterSips: 0 };
+  const state = { inventory: [], outfit: 'everyday', callComplete: false, hydration: hydrationSettings.initial, waterSips: 0, footballThoughts:{thirsty:false,tired:false} };
   registry.set(KEY, state);
   return state;
 }
