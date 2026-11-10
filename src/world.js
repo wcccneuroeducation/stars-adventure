@@ -1,5 +1,7 @@
 export const TILE=32;
-export const WORLD={width:64*TILE,height:32*TILE,spawn:{x:960,y:480}};
+import { willowSolids } from './neighbourhood/willowLayout.js';
+export const WORLD={x:0,y:-1152,width:88*TILE,height:68*TILE,spawn:{x:960,y:480}};
+export const BIRMINGHAM={width:64*TILE,height:32*TILE};
 export const houses=[4,9,14,19,24,29,34].flatMap(x=>[5,22].map(y=>({x:x*TILE,y:y*TILE,width:160,height:192})));
 // Home is the leftmost upper-row terrace at (128,160); door/path centre is x+80.
 // Place the sprite just below the doorway, on the open front garden path.
@@ -21,4 +23,4 @@ export const obstacles=[...houses,shop,
  {x:1312,y:656,width:384,height:16},{x:1760,y:656,width:160,height:16},
  {x:1248,y:400,width:64,height:32},{x:1696,y:384,width:96,height:48},
  {x:1856,y:416,width:24,height:24},{x:1792,y:736,width:32,height:32},
- {x:1920,y:864,width:32,height:32}];
+ {x:1920,y:864,width:32,height:32},...willowSolids];

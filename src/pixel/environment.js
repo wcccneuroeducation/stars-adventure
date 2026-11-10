@@ -1,4 +1,5 @@
-import { WORLD, TILE, houses, shop, obstacles } from '../world.js';
+import { BIRMINGHAM as WORLD, TILE, houses, shop, obstacles } from '../world.js';
+import { drawWillowLane } from './willowLane.js';
 import { PALETTE as p, createTileSet, tileArea, pixelRect } from './tiles.js';
 import { makeTerrace, drawShop, pixelLabel } from './buildings.js';
 
@@ -100,4 +101,5 @@ export function drawPixelEnvironment(scene) {
     paintEnvironment(ctx);texture.refresh();
   }
   scene.add.image(0,0,key).setOrigin(0);
+  drawWillowLane(scene);
 }

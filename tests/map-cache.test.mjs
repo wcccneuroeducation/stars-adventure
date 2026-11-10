@@ -5,7 +5,7 @@ import { drawPixelEnvironment } from '../src/pixel/environment.js';
 
 test('repeated map visits reuse baked textures instead of painting or allocating again',()=>{
   let operations=0,images=0;
-  const makeContext=()=>({fillRect(){operations++;},drawImage(){operations++;},fillText(){operations++;}});
+  const makeContext=()=>({translate(){},fillRect(){operations++;},drawImage(){operations++;},fillText(){operations++;}});
   globalThis.document={createElement:()=>({width:0,height:0,getContext:()=>makeContext()})};
   const textures=new Map([['player',{getSourceImage:()=>({})}]]),created=[];
   const scene={textures:{
@@ -15,12 +15,12 @@ test('repeated map visits reuse baked textures instead of painting or allocating
       const ctx=makeContext(),texture={getContext:()=>ctx,refresh(){}};textures.set(key,texture);return texture;
     },
     remove(){assert.fail('A cached map should not be removed on scene entry');}
-  },add:{image(){images++;return {setOrigin(){return this;}};}}};
+  },add:{rectangle(){return {setDepth(){return this;}};},image(){images++;return {setOrigin(){return this;}};}}};
   drawPixelEnvironment(scene);drawPark(scene);
   const firstPaint=operations;
-  assert.ok(firstPaint>0&&firstPaint<20000,'Terrain painting should remain bounded');
+  assert.ok(firstPaint>0&&firstPaint<35000,'Terrain painting should remain bounded');
   for(let visit=0;visit<20;visit++){drawPixelEnvironment(scene);drawPark(scene);}
-  assert.equal(operations,firstPaint);assert.equal(images,42);
-  assert.deepEqual(created.map(texture=>texture.key),['birmingham-environment','small-heath-park','player-back']);
-  assert.equal(textures.size,4);
+  assert.equal(operations,firstPaint);assert.equal(images,63);
+  assert.deepEqual(created.map(texture=>texture.key),['birmingham-environment','willow-lane-environment','small-heath-park','player-back']);
+  assert.equal(textures.size,5);
 });

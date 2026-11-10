@@ -169,6 +169,16 @@ Returning to the original home after visiting the park now opens **Adventure Com
 
 To review, hard-refresh and complete separate runs with/without water and with/without choosing rest. Compare the advice, including after drinking to recover from a low indicator. Exactly 30% or below at any point selects the low-indicator reminder even if the final value is higher. Check that the opening bedroom does not show completion and that Next Adventure displays only the placeholder. On smaller landscape screens, the existing dialog scrolls to keep all copy and the button accessible. Run `npm test` for automated regression coverage; physical iPad testing remains necessary.
 
+## Willow Lane — neighbourhood expansion
+
+Continue east beyond the existing park and bus stop to the **WILLOW LANE** sign, then turn north. The new road is part of Birmingham Street's existing scene: no loading transition. Follow either 64px pavement to the northern end, cross around the top, and return. Original homes, shop, park gate, collision records and interaction coordinates remain in place.
+
+`src/neighbourhood/willowLayout.js` defines the extension, ten houses, open garden gates, fences, furniture and a reserved western vacant unit. `src/pixel/willowLane.js` paints reusable upright side-porch houses, gardens, paving, road and sign using the existing palette/tiles. Houses use independently placed porches on the street side; no building sprite is rotated or flipped. The vacant unit has no interaction or storyline.
+
+`world.js` appends the new grouped collision rectangles and extends the bounds to `(0, -1152)` through `(2816, 1024)` without shifting existing map coordinates. `StreetScene.js` uses those same bounds for physics and camera. `pixel/environment.js` preserves the original 2048 × 1024 map and adds one separately cached 768 × 2176 extension texture. There is no per-frame map generation. Land above the old map is a solid, inaccessible backdrop; Willow Lane is reached from the junction.
+
+Testing: `npm test` includes continuous foot-body routes from home to both pavements and back, every garden entrance, fixed home/park coordinates, and repeated texture-cache reuse. Real browser checks covered keyboard walking north, turning at the end, returning down the opposite pavement, vertical camera follow, the original park entrance and personalised adventure completion. Physical iPad/Safari testing remains necessary. Existing roads remain walkable under the original collision rules; house interiors and the vacant unit are not accessible. No Pharmacy Panic gameplay has been added.
+
 ## GitHub Pages after review
 
 After reviewing and committing the files, use **Settings → Pages → Deploy from a branch**, select the desired branch and **/ (root)**. Paths are relative and work under a repository URL. No build configuration is needed. This task does not commit or push changes.

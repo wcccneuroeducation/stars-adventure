@@ -18,7 +18,7 @@ export class StreetScene extends Phaser.Scene{
   const spawn=Object.hasOwn(STREET_ENTRIES,data.entry)?STREET_ENTRIES[data.entry]:WORLD.spawn;
   document.querySelector('#status')?.remove();restoreStreetChrome();if(!this.textures.exists('player'))createTextures(this);drawStreet(this);
   this.state=getSunnyDayState(this.registry);
-  this.physics.world.setBounds(0,0,WORLD.width,WORLD.height);this.solids=this.physics.add.staticGroup();
+  this.physics.world.setBounds(WORLD.x,WORLD.y,WORLD.width,WORLD.height);this.solids=this.physics.add.staticGroup();
   obstacles.forEach(r=>this.solids.add(this.add.rectangle(r.x+r.width/2,r.y+r.height/2,r.width,r.height,0xff0000,0)));
   this.shadow=this.add.ellipse(0,0,24,10,0x263d38,.3);
   this.player=this.physics.add.sprite(spawn.x,spawn.y,'player').setDepth(10).setCollideWorldBounds(true);this.player.body.setSize(18,12).setOffset(7,20);this.physics.add.collider(this.player,this.solids);
@@ -41,7 +41,7 @@ export class StreetScene extends Phaser.Scene{
    onPause:()=>{if(!this.dialog.open&&!this.menu.open)this.menu.show(streetText.paused,streetText.pausedMessage,[{label:streetText.resume,run:()=>this.menu.close()}]);}
   });
   this.startHydrationTracking();
-  this.cameras.main.setBounds(0,0,WORLD.width,WORLD.height).startFollow(this.player,true,.12,.12).setRoundPixels(true);
+  this.cameras.main.setBounds(WORLD.x,WORLD.y,WORLD.width,WORLD.height).startFollow(this.player,true,.12,.12).setRoundPixels(true);
   const close=()=>this.dialog.close();const restoreFocus=()=>{this.controls.reset();document.querySelector('#game').focus({preventScroll:true});};
   const debug=()=>this.toggleDebug();const closeButton=document.querySelector('#close-dialog');const debugButton=document.querySelector('#debug');
   closeButton.addEventListener('click',close);this.dialog.addEventListener('close',restoreFocus);debugButton.addEventListener('click',debug);debugButton.setAttribute('aria-pressed','false');
