@@ -11,6 +11,7 @@ import { setBedroomChrome } from './ui/sceneChrome.js';
 import { HydrationHud } from './ui/HydrationHud.js';
 import { inventoryItemLabel } from './ui/backpack.js';
 import { coldMorningText } from './scenarios/coldMorningText.js';
+import { prescriptionText } from './scenarios/prescriptionData.js';
 const sunnyText=()=>text;
 
 export class BedroomScene extends Phaser.Scene {
@@ -51,7 +52,8 @@ export class BedroomScene extends Phaser.Scene {
       debugButton.setAttribute('aria-pressed','false');
     });
     this.nearId = undefined;
-    if(this.state.adventure!=='pharmacyPanic'&&data.returnHome&&this.state.hasVisitedPark)this.beginHomecoming();
+    if(this.state.adventure==='pharmacyPanic'&&data.fromStreet&&this.state.prescription?.bagReceived)this.beginPrescriptionHomecoming();
+    else if(this.state.adventure!=='pharmacyPanic'&&data.returnHome&&this.state.hasVisitedPark)this.beginHomecoming();
     else if (!this.state.callComplete) this.startCall();
     else document.querySelector('#game').focus({preventScroll:true});
   }
@@ -59,6 +61,12 @@ export class BedroomScene extends Phaser.Scene {
     if(this.state.completed)return;
     this.completing=true;this.controls.reset();this.player.setVelocity(0);
     this.showCompletion();
+  }
+  beginPrescriptionHomecoming(){
+    this.completing=true;this.controls.reset();this.player.setVelocity(0);
+    this.state.prescription.homeMessageSeen=true;
+    // Stop at the handoff to the future medication-routine activity.
+    this.dialog.show(coldMorningText.title,prescriptionText.home,[],{required:true});
   }
   showCompletion(){
     this.state.completed=true;this.state.objective='complete';this.hydrationHud.render();

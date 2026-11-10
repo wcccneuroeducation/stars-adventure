@@ -15,6 +15,8 @@ import { rescueState } from './robot/model.js';
 import { SortingGame } from './robot/SortingGame.js';
 import { RobotDisplay } from './robot/RobotDisplay.js';
 import { addRobotLights } from './robot/lights.js';
+import { PrescriptionActivity } from './prescription/PrescriptionActivity.js';
+import { prescriptionText } from './scenarios/prescriptionData.js';
 
 export class PharmacyScene extends Phaser.Scene{
   constructor(){super('Pharmacy');}
@@ -33,6 +35,7 @@ export class PharmacyScene extends Phaser.Scene{
     this.controls=new Controls(this);this.menu=new SceneDialog(this,this.controls);
     if(this.state.adventure==='pharmacyPanic'){
       this.sorting=new SortingGame(this);this.robotDisplay=new RobotDisplay(this);
+      this.prescriptionActivity=new PrescriptionActivity(this);
       this.menu.element.addEventListener('close',()=>this.menu.element.classList.remove('sorting-dialog'));
     }
     this.hydrationHud=new HydrationHud(this,this.state,{
@@ -60,10 +63,10 @@ export class PharmacyScene extends Phaser.Scene{
   }
   showRobotCelebration(){
     const p=rescueState(this.state);this.menu.element.classList.remove('sorting-dialog');
-    if(p.celebrationSeen){this.menu.show(robotText.robot,robotText.next,[{label:text.close,run:()=>this.menu.close()}]);return;}
+    if(p.celebrationSeen){this.menu.show(robotText.robot,prescriptionText.robotReminder,[{label:text.close,run:()=>this.menu.close()}]);return;}
     // The saved completion flag is set before this sequence, so closing/re-entry
     // cannot restart the challenge. An interrupted celebration can be revisited.
-    const lines=[robotText.complete,...robotText.robotReplies,...robotText.pharmacistReplies,robotText.next];let page=0;
+    const lines=[robotText.complete,...robotText.robotReplies,...robotText.pharmacistReplies];let page=0;
     const show=()=>{
       let content=null;
       if(page===0){
@@ -76,7 +79,7 @@ export class PharmacyScene extends Phaser.Scene{
       }
       const speaker=page===0?robotText.robot:page<=2?robotText.robot:text.pharmacist;
       this.menu.show(speaker,lines[page],[{label:page===lines.length-1?text.close:text.continue,run:()=>{
-        if(++page<lines.length)show();else {p.celebrationSeen=true;this.menu.close();}
+        if(++page<lines.length)show();else {p.celebrationSeen=true;this.prescriptionActivity.pharmacist();}
       }}],{content});
       if(page===0){this.menu.element.classList.add('robot-celebration');this.menu.element.addEventListener('animationend',()=>this.menu.element.classList.remove('robot-celebration'),{once:true});}
     };show();
@@ -88,6 +91,7 @@ export class PharmacyScene extends Phaser.Scene{
     }
     if(id==='pharmacist'){
       const p=this.state.robotRescue;
+      if(this.state.adventure==='pharmacyPanic'&&p?.completed){this.prescriptionActivity.pharmacist();return;}
       if(this.state.adventure==='pharmacyPanic'&&p?.available){
         this.showRobotLines(p.completed?[...robotText.pharmacistReplies,robotText.next]:[robotText.help],text.pharmacist);return;
       }
@@ -102,6 +106,7 @@ export class PharmacyScene extends Phaser.Scene{
       }]);show();
     }
     if(id==='robot'&&this.state.adventure==='pharmacyPanic'&&this.state.robotRescue?.available)this.sorting.open();
+    if(id.startsWith('shelf-')&&this.state.adventure==='pharmacyPanic')this.prescriptionActivity.shelf(id);
   }
   update(_time,delta=1000/60){
     if(!this.controls)return;
@@ -112,9 +117,11 @@ export class PharmacyScene extends Phaser.Scene{
     this.shadow.setPosition(this.player.x,this.player.y+12);
     let object=nearbyPharmacyObject(this.player.x,this.player.y+10);
     if(object?.id==='robot'&&!this.state.robotRescue?.available)object=null;
+    if(object?.id.startsWith('shelf-')&&(!this.state.prescription?.started||this.state.prescription.bagReceived))object=null;
     this.prompt.setVisible(Boolean(object)&&!busy);
-    if(object)this.prompt.setText(object.id==='robot'?robotText.prompt:text.prompts[object.id]).setPosition(this.player.x,this.player.y-25);
-    if(this.nearId!==object?.id){document.querySelector('#hint').textContent=object?(object.id==='robot'?robotText.prompt:text.prompts[object.id]):text.roomHint;this.nearId=object?.id;}
+    const objectPrompt=object?.id.startsWith('shelf-')?prescriptionText.prompt:object?.id==='robot'?robotText.prompt:text.prompts[object?.id];
+    if(object)this.prompt.setText(objectPrompt).setPosition(this.player.x,this.player.y-25);
+    if(this.nearId!==object?.id){document.querySelector('#hint').textContent=object?(object.id.startsWith('shelf-')?prescriptionText.hint:objectPrompt):text.roomHint;this.nearId=object?.id;}
     if(object&&pressed&&!busy)this.interact(object.id);
   }
 }

@@ -115,7 +115,7 @@ export class StreetScene extends Phaser.Scene{
   if(location!==this.wasNear){document.querySelector('#hint').textContent=near?'Corner shop · press E or tap INTERACT':atPark?streetText.parkHint:atHome?sunnyDayText.homeHint:'Explore the street · look for the teal shop sign';this.wasNear=location;}
   if(near&&interact&&!busy){this.player.setVelocity(0);this.controls.reset();this.dialog.showModal();}
   if(atPark&&interact&&!busy){this.player.setVelocity(0);this.controls.reset();this.scene.start('Park',{visitStartedAt:performance.now()});}
-  if(atHome&&interact&&!busy){this.player.setVelocity(0);this.controls.reset();this.scene.start('Bedroom',{returnHome:this.state.hasVisitedPark});}
+  if(atHome&&interact&&!busy){this.player.setVelocity(0);this.controls.reset();this.scene.start('Bedroom',{returnHome:this.state.hasVisitedPark,fromStreet:true});}
   if(atPharmacy){document.querySelector('#hint').textContent=pharmacyText.exteriorHint;}
   if(atPharmacy&&interact&&!busy){this.player.setVelocity(0);this.controls.reset();this.scene.start('Pharmacy');}
   if(this.playerDebug.visible){const b=this.player.body;this.playerDebug.clear().lineStyle(2,0xffe09c).strokeRect(b.x,b.y,b.width,b.height);}

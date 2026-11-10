@@ -3,6 +3,8 @@ import { streetText as text } from '../scenarios/streetText.js';
 import { sunnyDayText } from '../scenarios/sunnyDayText.js';
 import { coldMorningText } from '../scenarios/coldMorningText.js';
 import { robotText } from '../scenarios/robotRescueData.js';
+import { prescriptionText } from '../scenarios/prescriptionData.js';
+import { openPrescriptionCard } from '../prescription/card.js';
 
 export class HydrationHud {
   constructor(scene, state, { onBackpack, onPause } = {}) {
@@ -25,6 +27,12 @@ export class HydrationHud {
       button.addEventListener('click',run);actions.append(button);
     }
     this.element.append(actions);
+    this.prescriptionButton=document.createElement('button');this.prescriptionButton.type='button';this.prescriptionButton.textContent=prescriptionText.card;
+    this.prescriptionButton.addEventListener('click',()=>{
+      const menu=scene.menu??scene.dialog;
+      if(!menu?.open&&!scene.dialog?.open)openPrescriptionCard(menu,state);
+    });actions.append(this.prescriptionButton);
+    this.basketElement=document.createElement('span');this.basketElement.className='prescription-basket';actions.append(this.basketElement);
     this.objectiveElement=document.createElement('span');this.objectiveElement.className='adventure-objective';
     this.element.append(this.objectiveElement);
     document.querySelector('#game').before(this.element);
@@ -32,9 +40,14 @@ export class HydrationHud {
     this.render();
   }
   render() {
+    if(this.prescriptionButton){
+      const active=Boolean(this.state.prescription?.started);this.prescriptionButton.hidden=!active;this.basketElement.hidden=!active;
+      if(active)this.basketElement.textContent=prescriptionText.basket(this.state.prescription.found.length);
+    }
     if(this.objectiveElement){
       const objective=this.state.objective||'explore';
-      const label=objective==='collectPrescription'?coldMorningText.objective:objective==='repairRobot'?robotText.repairObjective:objective==='prescriptionCollection'?robotText.prescriptionObjective:sunnyDayText.objectives[objective];
+      const prescriptionLabels={findPrescription:prescriptionText.findObjective,returnPharmacist:prescriptionText.returnObjective,takePrescriptionHome:prescriptionText.homeObjective};
+      const label=prescriptionLabels[objective]??(objective==='collectPrescription'?coldMorningText.objective:objective==='repairRobot'?robotText.repairObjective:objective==='prescriptionCollection'?robotText.prescriptionObjective:sunnyDayText.objectives[objective]);
       if(this.lastObjective!==objective){this.objectiveElement.textContent=sunnyDayText.objectiveLabel(label);this.lastObjective=objective;}
     }
     const value=this.state.hydration, displayed=Math.ceil(value);

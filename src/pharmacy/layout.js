@@ -14,6 +14,8 @@ export const robotZone={id:'robot',x:608,y:304,width:256,height:64};
 export const pharmacyObjects=[
   {id:'pharmacist',x:288,y:304,width:128,height:64},
   robotZone, // Public side of the counter; artwork uses this same rectangle.
+  {id:'shelf-left',x:160,y:384,width:64,height:160},
+  {id:'shelf-right',x:736,y:384,width:64,height:160},
   {id:'exit',x:432,y:688,width:96,height:48}
 ];
 export const nearbyPharmacyObject=(x,y)=>pharmacyObjects.find(r=>x>=r.x&&x<r.x+r.width&&y>=r.y&&y<r.y+r.height);

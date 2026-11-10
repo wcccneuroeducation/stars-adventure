@@ -3,8 +3,10 @@ import { streetText } from '../scenarios/streetText.js';
 import { canDrink, drinkWater } from '../mechanics/hydration.js';
 import { BOTTLE_CAPACITY, bottleSips } from '../mechanics/waterBottle.js';
 import { coldMorningText } from '../scenarios/coldMorningText.js';
+import { prescriptionText } from '../scenarios/prescriptionData.js';
 
 export function inventoryItemLabel(state, id) {
+  if(id==='prescriptionBag')return prescriptionText.bag;
   if(id==='hat'&&state.adventure==='pharmacyPanic')return coldMorningText.objects.hat;
   return id === 'water' ? streetText.bottleSips(bottleSips(state),BOTTLE_CAPACITY) : text.objects[id] || id;
 }
