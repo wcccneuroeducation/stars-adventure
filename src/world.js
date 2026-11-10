@@ -25,5 +25,5 @@ export const obstacles=[...houses,shop,
  {x:288,y:384,width:928,height:16},{x:128,y:656,width:1120,height:16},
  {x:1312,y:656,width:384,height:16},{x:1760,y:656,width:160,height:16},
  {x:1248,y:400,width:64,height:32},{x:1696,y:384,width:96,height:48},
- {x:1856,y:416,width:24,height:24},{x:1792,y:736,width:32,height:32},
+ {x:1856,y:392,width:24,height:24},{x:1792,y:736,width:32,height:32},
  {x:1920,y:864,width:32,height:32},...willowSolids,...townSolids];

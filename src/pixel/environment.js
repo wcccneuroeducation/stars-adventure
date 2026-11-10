@@ -55,10 +55,13 @@ export function paintEnvironment(ctx) {
   shelter(1696,384);
   r(1809,390,6,41,'#728879');r(1810,391,1,39,'#c1c9b0');
   r(1799,362,28,29,p.cream);r(1801,364,24,17,'#bd604c');
-  label('BUS',1813,367,9);r(1804,385,18,2,'#8b9b8c');
-  r(1856,416,24,24,'#315b50');r(1858,419,20,17,'#477b61');
-  for(let i=0;i<4;i++)r(1861+i*4,422,1,13,'#638f71');
-  r(1856,416,24,4,'#aec09a');r(1862,417,12,2,'#253d3e');
+  label('BUS',1813,367,9);label('H1',1813,386,8,'#294e4b');
+  r(1698,370,94,12,p.teal);label('H1 HOSPITAL',1745,372,8);
+  // A flush road-edge stop marking, beside the original glazed shelter.
+  for(let x=1680;x<1816;x+=24)r(x,450,14,3,'#dec36b');
+  r(1856,392,24,24,'#315b50');r(1858,395,20,17,'#477b61');
+  for(let i=0;i<4;i++)r(1861+i*4,398,1,13,'#638f71');
+  r(1856,392,24,4,'#aec09a');r(1862,393,12,2,'#253d3e');
   // The park gate is open: no bars cross the walkable 64px entrance.
   for(const x of [1688,1760]){r(x,645,8,40,'#936047');r(x,645,8,5,'#e1c391');r(x+2,651,2,32,'#c08257');}
   // A painted nameplate sits on the existing wall to the right of the gate.
@@ -82,6 +85,7 @@ export function paintEnvironment(ctx) {
     r(x+10,y+34,33,3,'#d0a36d');r(x+10,y+37,3,6,'#3e514e');r(x+40,y+37,3,6,'#3e514e');
     r(x+60,y+12,19,22,p.cream);r(x+62,y+14,15,3,'#c57756');
     for(let yy=0;yy<4;yy++)r(x+63,y+21+yy*3,12,1,'#718b81');
+    label('H1',x+69,y+13,7,'#294e4b');
     r(x,y,96,7,'#2f5557');r(x,y,96,2,'#92b5a5');
   }
   function tree(x,y){

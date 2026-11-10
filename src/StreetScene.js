@@ -12,6 +12,8 @@ import { sunnyDayText } from './scenarios/sunnyDayText.js';
 import { pharmacyZone } from './pharmacy/layout.js';
 import { pharmacyText } from './scenarios/pharmacyText.js';
 import { school,townText } from './neighbourhood/townLayout.js';
+import { TrafficSystem } from './traffic/TrafficSystem.js';
+import { busStop,trafficText } from './traffic/routes.js';
 // Temporary diagnostics are disabled after verifying the initial-focus regression.
 const DEBUG_HYDRATION = false;
 export class StreetScene extends Phaser.Scene{
@@ -51,6 +53,9 @@ export class StreetScene extends Phaser.Scene{
    onPause:()=>{if(!this.dialog.open&&!this.menu.open)this.menu.show(streetText.paused,streetText.pausedMessage,[{label:streetText.resume,run:()=>this.menu.close()}]);}
   });
   this.startHydrationTracking();
+  this.traffic=new TrafficSystem(this);
+  this.busZone=new Phaser.Geom.Rectangle(busStop.zone.x,busStop.zone.y,busStop.zone.width,busStop.zone.height);
+  this.busPrompt=this.add.text(1760,432,trafficText.prompt,{fontFamily:'monospace',fontSize:11,color:'#fff0be',backgroundColor:'#294e4b',padding:{x:7,y:5}}).setOrigin(.5,1).setDepth(12).setVisible(false);
   this.cameras.main.setBounds(WORLD.x,WORLD.y,WORLD.width,WORLD.height).startFollow(this.player,true,.12,.12).setRoundPixels(true);
   const close=()=>this.dialog.close();const restoreFocus=()=>{this.controls.reset();document.querySelector('#game').focus({preventScroll:true});};
   const debug=()=>this.toggleDebug();const closeButton=document.querySelector('#close-dialog');const debugButton=document.querySelector('#debug');
@@ -104,10 +109,13 @@ export class StreetScene extends Phaser.Scene{
   return movementMs;
  }
  toggleDebug(){this.debugGraphics.visible=!this.debugGraphics.visible;this.playerDebug.visible=this.debugGraphics.visible;document.querySelector('#debug').setAttribute('aria-pressed',String(this.debugGraphics.visible));}
- update(){if(!this.controls)return;
+ update(_time,delta=1000/60){if(!this.controls)return;
   const interact=this.controls.consumeInteraction();if(Phaser.Input.Keyboard.JustDown(this.controls.keys.C))this.toggleDebug();
   const busy=this.dialog.open||this.menu.open||this.physics.world.isPaused||!document.hasFocus()||document.hidden;
   const d=busy?{x:0,y:0}:this.controls.direction();this.outdoorMovementRequested=Boolean(d.x||d.y);this.player.setVelocity(d.x*150,d.y*150);if(d.x)this.player.setFlipX(d.x<0);this.shadow.setPosition(this.player.x,this.player.y+12);
+  this.traffic?.update(delta,busy||this.game.isPaused);
+  const atBus=Boolean(this.busZone)&&Phaser.Geom.Rectangle.Contains(this.busZone,this.player.x,this.player.y+10);
+  this.busPrompt?.setVisible(atBus&&!busy);
   const near=Phaser.Geom.Rectangle.Contains(this.zone,this.player.x,this.player.y+10);
   const atPark=Phaser.Geom.Rectangle.Contains(this.parkZone,this.player.x,this.player.y+10);
   const atHome=Boolean(this.homeZone)&&Phaser.Geom.Rectangle.Contains(this.homeZone,this.player.x,this.player.y+10);
@@ -117,7 +125,7 @@ export class StreetScene extends Phaser.Scene{
   this.pharmacyPrompt?.setVisible(atPharmacy&&!busy);
   this.prompt.setVisible(near&&!busy);this.parkPrompt.setVisible(atPark&&!busy);
   this.homePrompt?.setVisible(atHome&&!busy);
-  const location=near?'shop':atPark?'park':atHome?'home':atPharmacy?'pharmacy':atSchool?'school':null;
+  const location=near?'shop':atPark?'park':atHome?'home':atPharmacy?'pharmacy':atSchool?'school':atBus?'bus':null;
   if(location!==this.wasNear){document.querySelector('#hint').textContent=near?'Corner shop · press E or tap INTERACT':atPark?streetText.parkHint:atHome?sunnyDayText.homeHint:'Explore the street · look for the teal shop sign';this.wasNear=location;}
   if(near&&interact&&!busy){this.player.setVelocity(0);this.controls.reset();this.dialog.showModal();}
   if(atPark&&interact&&!busy){this.player.setVelocity(0);this.controls.reset();this.scene.start('Park',{visitStartedAt:performance.now()});}
@@ -126,6 +134,8 @@ export class StreetScene extends Phaser.Scene{
   if(atPharmacy&&interact&&!busy){this.player.setVelocity(0);this.controls.reset();this.scene.start('Pharmacy');}
   if(atSchool)document.querySelector('#hint').textContent=townText.schoolPrompt;
   if(atSchool&&interact&&!busy)this.menu.show(townText.school,townText.schoolSoon,[{label:townText.close,run:()=>this.menu.close()}]);
+  if(atBus)document.querySelector('#hint').textContent=trafficText.prompt;
+  if(atBus&&interact&&!busy)this.menu.show(trafficText.title,`${trafficText.route}\n\n${trafficText.message}`,[{label:trafficText.close,run:()=>this.menu.close()}]);
   if(this.playerDebug.visible){const b=this.player.body;this.playerDebug.clear().lineStyle(2,0xffe09c).strokeRect(b.x,b.y,b.width,b.height);}
  }
 }
