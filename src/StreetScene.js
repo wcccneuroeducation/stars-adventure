@@ -11,8 +11,9 @@ import { openBackpack } from './ui/backpack.js';
 // Temporary diagnostics are disabled after verifying the initial-focus regression.
 const DEBUG_HYDRATION = false;
 export class StreetScene extends Phaser.Scene{
- constructor(){super('BirminghamStreet');}
+ constructor(key='BirminghamStreet'){super(key);}
  create(data={}){
+  this.wasNear=undefined;
   const spawn=Object.hasOwn(STREET_ENTRIES,data.entry)?STREET_ENTRIES[data.entry]:WORLD.spawn;
   document.querySelector('#status')?.remove();restoreStreetChrome();if(!this.textures.exists('player'))createTextures(this);drawStreet(this);
   this.state=getSunnyDayState(this.registry);
@@ -46,16 +47,24 @@ export class StreetScene extends Phaser.Scene{
  startHydrationTracking(){
   this.hydrationMovement=new HydrationMovement(this.state);
   this.outdoorMovementRequested=false;
-  const resetMovement=()=>{this.hydrationMovement.reset();this.outdoorMovementRequested=false;this.player.setVelocity(0);};
+  const resetMovement=()=>{
+   this.hydrationMovement.reset();this.outdoorMovementRequested=false;
+   // Focus/visibility can change during plugin/display-list shutdown, after
+   // Phaser has destroyed the sprite's body but before our DOM listeners detach.
+   if(this.player?.body)this.player.setVelocity(0);
+  };
   // Sample once per completed physics step, after collision resolution.
   // Render deltas may be shorter than a fixed physics step on 120Hz displays;
   // comparing those deltas to physics displacement falsely rejects real walking.
   const measureMovement=deltaSeconds=>this.updateHydration(deltaSeconds*1000);
-  this.physics.world.on('worldstep',measureMovement);
+  // Arcade Physics shuts down before this user callback and clears plugin.world.
+  // Retain the emitter we subscribed to; do not dereference plugin.world later.
+  const hydrationWorld=this.physics.world;
+  hydrationWorld.on('worldstep',measureMovement);
   for(const event of ['pause','resume','sleep','wake'])this.events.on(event,resetMovement);
   window.addEventListener('blur',resetMovement);window.addEventListener('focus',resetMovement);document.addEventListener('visibilitychange',resetMovement);
   this.events.once('shutdown',()=>{
-   this.physics.world.off('worldstep',measureMovement);
+   hydrationWorld.off('worldstep',measureMovement);
    for(const event of ['pause','resume','sleep','wake'])this.events.off(event,resetMovement);
    window.removeEventListener('blur',resetMovement);window.removeEventListener('focus',resetMovement);document.removeEventListener('visibilitychange',resetMovement);
   });
@@ -90,7 +99,7 @@ export class StreetScene extends Phaser.Scene{
   const location=near?'shop':atPark?'park':null;
   if(location!==this.wasNear){document.querySelector('#hint').textContent=near?'Corner shop · press E or tap INTERACT':atPark?streetText.parkHint:'Explore the street · look for the teal shop sign';this.wasNear=location;}
   if(near&&interact&&!busy){this.player.setVelocity(0);this.controls.reset();this.dialog.showModal();}
-  if(atPark&&interact&&!busy)this.menu.show(streetText.park,streetText.parkWelcome,[{label:streetText.close,run:()=>this.menu.close()}]);
+  if(atPark&&interact&&!busy){this.player.setVelocity(0);this.controls.reset();this.scene.start('Park');}
   if(this.playerDebug.visible){const b=this.player.body;this.playerDebug.clear().lineStyle(2,0xffe09c).strokeRect(b.x,b.y,b.width,b.height);}
  }
 }

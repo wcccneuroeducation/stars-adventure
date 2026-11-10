@@ -94,9 +94,10 @@ export function paintEnvironment(ctx) {
 export function drawPixelEnvironment(scene) {
   // One GPU texture and one world image; no thousands of per-tile GameObjects.
   const key='birmingham-environment';
-  if(scene.textures.exists(key))scene.textures.remove(key);
-  const texture=scene.textures.createCanvas(key,WORLD.width,WORLD.height);
-  const ctx=texture.getContext();ctx.imageSmoothingEnabled=false;
-  paintEnvironment(ctx);texture.refresh();
+  if(!scene.textures.exists(key)){
+    const texture=scene.textures.createCanvas(key,WORLD.width,WORLD.height);
+    const ctx=texture.getContext();ctx.imageSmoothingEnabled=false;
+    paintEnvironment(ctx);texture.refresh();
+  }
   scene.add.image(0,0,key).setOrigin(0);
 }

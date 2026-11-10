@@ -30,6 +30,7 @@ function streetFixture() {
   scene.physics={world:Object.assign(new EventEmitter(),{isPaused:false})};scene.events=new EventEmitter();scene.sys={isActive:()=>true};scene.game={hasFocus:false,isPaused:false};
   scene.controls={keys:{C:{}},direction:()=>({x:1,y:0}),consumeInteraction:()=>false,reset(){}};
   scene.zone=shopZone;scene.parkZone=parkZone;scene.prompt={setVisible(){}};scene.parkPrompt={setVisible(){}};scene.playerDebug={visible:false};
+  scene.scene={start:(key,data)=>{scene.destination={key,data};}};
   return scene;
 }
 
@@ -55,11 +56,10 @@ test('shop interaction still opens its existing dialog',()=>{
   assert.deepEqual(scene.player.velocity,{x:0,y:0});
 });
 
-test('park interaction shows a welcome without changing scenes, inventory or hydration',()=>{
+test('park interaction enters the park without changing inventory or hydration',()=>{
   const scene=streetFixture();scene.player.x=1728;scene.player.y=630;scene.state.inventory=['water'];scene.state.hydration=42;
   scene.controls.consumeInteraction=()=>true;scene.update();
-  assert.equal(scene.menu.message,streetText.parkWelcome);assert.equal(scene.state.hydration,42);assert.deepEqual(scene.state.inventory,['water']);
-  scene.menu.actions[0].run();assert.equal(scene.menu.open,false);
+  assert.equal(scene.destination.key,'Park');assert.equal(scene.state.hydration,42);assert.deepEqual(scene.state.inventory,['water']);
 });
 
 test('home entry and park gate remain outside the existing collision rectangles',()=>{
@@ -150,4 +150,19 @@ test('focused page drains and refreshes the real HUD even when Phaser hasFocus r
     assert.equal(scene.hydrationHud.state,scene.state);assert.equal(scene.hydrationMovement.state,scene.state);
     scene.events.emit('shutdown');
   }
+});
+
+test('shutdown tolerates Phaser clearing plugin.world before hydration cleanup',()=>{
+  const scene=streetFixture(),world=scene.physics.world;
+  // Real ArcadePhysics registers its shutdown listener before scene create().
+  scene.events.once('shutdown',()=>{
+    world.removeAllListeners();scene.physics.world=null;scene.player.body=undefined;
+    scene.player.setVelocity=function(){if(!this.body)throw new Error('Destroyed physics body');};
+    assert.doesNotThrow(()=>scene.events.emit('pause'));
+  });
+  scene.startHydrationTracking();assert.equal(world.listenerCount('worldstep'),1);
+  assert.doesNotThrow(()=>scene.events.emit('shutdown'));
+  assert.equal(world.listenerCount('worldstep'),0);
+  assert.equal(scene.events.listenerCount('pause'),0);
+  assert.equal(scene.events.listenerCount('resume'),0);
 });

@@ -14,3 +14,6 @@ export function restoreStreetChrome() {
   document.querySelector('.shell').setAttribute('aria-label', 'Birmingham Street game');
   document.querySelector('#hint').textContent = 'Explore the street · look for the teal shop sign';
 }
+
+// Location chrome accepts the same editable-copy shape in both interior/park scenes.
+export const setParkChrome = setBedroomChrome;

@@ -5,7 +5,8 @@ export const houses=[4,9,14,19,24,29,34].flatMap(x=>[5,22].map(y=>({x:x*TILE,y:y
 // Place the sprite just below the doorway, on the open front garden path.
 // Its foot body (y=372..384) is clear of the house, which ends at y=352.
 export const STREET_ENTRIES = {
-  home: { x: houses[0].x+80, y: houses[0].y+houses[0].height+16, facing: 'down' }
+  home: { x: houses[0].x+80, y: houses[0].y+houses[0].height+16, facing: 'down' },
+  park: { x:1728, y:614, facing:'down' }
 };
 export const shop={x:1344,y:160,width:288,height:192};
 export const shopZone={x:1408,y:352,width:192,height:80};

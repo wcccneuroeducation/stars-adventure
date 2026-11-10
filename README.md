@@ -32,7 +32,7 @@ Serve this folder over HTTP; do not double-click index.html because it uses Java
 * `src/main.js`: Phaser configuration and responsive scaling.
 * `index.html` / `styles.css`: page, touch controls and accessible shop dialog.
 
-Collision uses whole buildings, wall runs and furniture rectangles rather than tile bodies. The street is Birmingham-inspired, not geographically accurate. Art uses simple shapes; no image assets are required. No educational scenarios, weather or character customisation are included.
+Collision uses whole buildings, wall runs and furniture rectangles rather than tile bodies. The street and park are Birmingham-inspired, not geographically accurate. Art uses simple shapes; no image assets are required. No weather or character customisation is included.
 
 ## Environment art pass
 
@@ -58,16 +58,48 @@ Hydration uses the same live document focus/visibility checks as street movement
 4. Open **Backpack** in the status row. A newly collected bottle shows **Water Bottle — 4/4 sips**. After walking, press **Drink water**: hydration increases by 25 (capped at 100) and exactly one sip is consumed. At 100% the action is disabled without consuming a sip. Continue walking and drinking to reach 0/4: the empty bottle remains listed and Drink stays disabled. Movement stays stopped while the menu is open.
 5. Reload, leave the bottle behind, and exit. **Backpack** must show no drink action.
 6. For faster colour-boundary testing, temporarily increase `pointsPerSecond` in settings, then restore `1.7`. Above 60 is blue, 31–60 amber, and 0–30 red. At 0 the game remains playable with no additional effects. After drinking and closing the backpack, walk again to check that depletion resumes.
-7. Walk to the open park gate at the right of the lower wall, press **E** or tap **INTERACT**, and close the welcome message. No park interior is created and state is unchanged.
+7. Walk to the open park gate at the right of the lower wall, press **E** or tap **INTERACT**, and enter the park. Inventory, remaining sips and hydration are preserved. Use the southern park gate to return to the street.
 8. Repeat the backpack, drinking, pause, movement and gate checks on an iPad in landscape. Keyboard users can Tab to the status buttons and activate them with Enter or Space. The existing directional and interaction touch controls are retained.
 
 With Node installed, run `npm test` (no dependencies to install). Tests cover depletion timing, movement blocked by collision, inactive contexts, fixed physics steps at 30/60/120/144Hz rendering, equal loss for all inventory combinations, the actual bedroom pickup/exit handlers, post-drink walking, the collision-checked home-to-park route, listener cleanup, four-sip capacity, full/empty drinking guards, refilling, inventory guards, bounds, colours, new-adventure reset, scene-state reuse and existing bedroom actions/reachability. A full browser/iPad regression test is still required on the target devices.
 
-### Bottle capacity and future fountain hook
+### Bottle capacity and fountain hook
 
 `waterSips` is held alongside hydration in the shared adventure state. Collecting the bottle initialises four sips; duplicate pickup calls do not refill it. A scene change preserves the exact remaining count, including zero. Runs from before capacity existed initialise the count once, only if a bottle was already carried; no bottle is automatically added. Bedroom and street backpack lists both show the count.
 
-`src/mechanics/waterBottle.js` exports `BOTTLE_CAPACITY`, `bottleSips(state)` and `refillWaterBottle(state)`. The refill function restores a carried bottle to 4/4 and returns true. Without a bottle it returns false and changes nothing. Repeated refills never exceed capacity or restore hydration directly. A future fountain menu can call it after the player chooses to refill; declining should perform no action. No park interior, fountain graphics or fountain interaction has been added in this stage.
+`src/mechanics/waterBottle.js` exports `BOTTLE_CAPACITY`, `bottleSips(state)` and `refillWaterBottle(state)`. The refill function restores a carried bottle to 4/4 and returns true. Without a bottle it returns false and changes nothing. Repeated refills never exceed capacity or restore hydration directly. The park fountain menu calls it only after the player chooses to refill; declining performs no action. Players without a bottle can optionally drink directly for +25 hydration, capped at 100, without receiving a bottle.
+
+## Explorable park
+
+`ParkScene` is a separate 1600 × 1536 scene with camera follow, winding connected paths and an eastern loop, trees, flowerbeds, a shaded seating pergola, a drinking fountain and a fenced MUGA. Jay and three friends wait near the MUGA. All art is generated in Canvas using the existing 32px terrain palette. There is no football gameplay, energy/fatigue meter, clinical event, scoring or forced choice.
+
+The park inherits the street's tested `startHydrationTracking`, `updateHydration` and collision-debug toggle, and reuses `Controls`, `SceneDialog`, `HydrationHud`, the shared registry and four-sip backpack. Its `create` and `update` implement its own map and interactions without constructing or modifying the street. Rest adds a guard to pause depletion without restoring hydration. Other menus pause it through the same existing dialog guard.
+
+* `src/ParkScene.js`: scene, optional interactions, sitting/standing and return transition.
+* `src/park/layout.js`: world dimensions, connected paths, gate, props, broad collision rectangles and interaction zones.
+* `src/park/art.js`: procedural scenery, friends and a temporary rear-facing player view for entering the park.
+* `src/park/interactions.js`: optional fountain actions using the existing refill function.
+* `src/scenarios/parkText.js`: separately editable scenario and interaction copy.
+
+### Park playtest
+
+1. Hard-refresh and leave the bedroom as usual. Reach the street's existing park gate and press **E** or tap **INTERACT**. Check that the player appears on the path just inside the southern park gate, facing into the park. Hydration and backpack contents should match the street.
+2. Follow the path north, then west, then north. Inspect the flowerbeds and eastern loop. Check camera follow, WASD/arrows, touch movement and **C / Show collisions**. Walk against trees, fence rails, flowerbeds, the bench, fountain and NPCs; movement should stop at their collision boundaries. Gate gaps remain open.
+3. At the shaded pergola beside the western path, interact with the bench. Decline once, then choose **Sit and rest**. Check the seated position and unchanged hydration while resting. Choose **Stand up**, or press Escape, and check that the player returns to their safe approach position and can move again. Walking resumes depletion.
+4. At the fountain on the next path bend, test **Refill Water Bottle** with a partially used or empty bottle. Check 4/4 sips and unchanged hydration. Decline once to check nothing changes. On another new run without a bottle, test **Drink from Fountain**: hydration rises by 25, capped at 100, and the backpack stays bottle-free.
+5. Walk to Jay near the MUGA and interact. Check the exact line: “Hey! You made it! Fancy a game of football?” Close it; no football game starts.
+6. Return to the southern park gate, decline once, then choose **Return to street**. Check the pavement spawn beside the original park entrance, with hydration, inventory and sips preserved. Re-enter to check there are no duplicate controls, HUDs or hydration listeners.
+7. Repeat on an iPad in landscape, including touch interaction, backpack use and declining menus. Browser/device gameplay validation remains required; automated tests cover the scene methods, collision reachability, state persistence, hydration/rest guards and fountain branches. The procedural full-map preview has been rendered and inspected separately.
+
+### Park transition crash fix and verification
+
+The freeze was reproduced in headless Edge running the real Phaser 3.90 engine. The street shutdown callback tried `this.physics.world.off(...)` after Arcade Physics had already cleared `plugin.world` to null. The resulting uncaught exception interrupted the scene manager transition before park creation. `startHydrationTracking()` now retains the world emitter when registering and removes the listener through that reference. Its focus/reset callback also tolerates a sprite body already destroyed during shutdown. Both the street and park use this corrected lifecycle.
+
+Map painting loops are bounded and run only at scene creation. The existing 2048 × 1024 street and 1600 × 1536 park now cache their baked textures for later visits; no map repaint or texture replacement occurs on re-entry. Scene display objects and listeners still shut down normally. No park features were removed and the gate requires deliberate interaction; entering does not automatically trigger the exit.
+
+Verified with the real browser: Bedroom → Street → Park, followed by 20 Park → Street → Park round trips, with no console errors or warnings. Movement, a blocked fence collision, camera tracking, pointer-operated directional controls, resting, refilling, drinking and post-drink depletion were checked. A used bottle (3 sips) and reduced hydration persisted through the return/re-entry tests. Across repeated visits there were 9 textures, 65 park display objects, 59 static bodies, 1 player body, 1 hydration listener, 1 HUD and 1 scenario dialog. The map textures were not recreated. Garbage-collected JavaScript heap settled near 8.2 MB after warm-up; this is not a measurement of GPU memory or a physical iPad test.
+
+Regression tests now simulate Phaser clearing the world/body before user shutdown callbacks, and check that 20 repeated map visits do not repaint or allocate additional map textures. To verify manually, hard-refresh, follow Bedroom → Street → Park → Street → Park several times, and watch the browser console. Check the return spawn beside the street gate, backpack/sips, hydration and touch controls. Physical iPad/Safari validation remains outstanding.
 
 ## GitHub Pages after review
 
