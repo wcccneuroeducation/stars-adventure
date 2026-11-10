@@ -38,6 +38,8 @@ export function paintEnvironment(ctx) {
     ctx.drawImage(terraceCache.get(key),h.x,h.y);
     label(String(12+index*2),h.x+80,h.y+124,7,'#f2d6ab');
   });
+  // Connect home's existing garden path through its open frontage to the pavement.
+  fill('path',houses[0].x+64,houses[0].y+houses[0].height+32,32,32);
   drawShop(ctx,tiles,shop);
 
   // Walls use the existing collision records directly, so art cannot drift.
