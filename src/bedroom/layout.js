@@ -15,6 +15,8 @@ export const bedroomObjects = [
   { id: 'backpack', zone: { x: 528, y: 240, width: 112, height: 64 } },
   { id: 'door', zone: { x: 672, y: 384, width: 128, height: 64 } }
 ];
+// Right-hand approach to the existing desk; keeps the backpack's front zone usable.
+export const medicineDesk={id:'medicineDesk',zone:{x:640,y:208,width:40,height:64}};
 
 export function nearbyObject(objects, x, y, inventory) {
   return objects.find(object => {

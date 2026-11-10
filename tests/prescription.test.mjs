@@ -54,8 +54,9 @@ test('pharmacist performs final checks and scene-owned packing animation before 
   const activity=new PrescriptionActivity(scene);activity.pharmacist();assert.equal(scene.menu.message,text.finalChecks[0]);scene.menu.actions[0].run();assert.equal(scene.menu.message,text.finalChecks[1]);scene.menu.actions[0].run();
   assert.equal(scene.menu.message,text.preparing);assert.equal(state.prescription.bagReceived,false);finish();assert.equal(state.prescription.bagReceived,true);assert.equal(destroyed,true);assert.equal(scene.menu.message,text.received);
 });
-test('returning home with the bag stops at the future routine handoff',()=>{
+test('returning home with the bag unlocks the desk and keeps bedroom exploration available',()=>{
   const scene=new BedroomScene();scene.state=ready();startPrescription(scene.state);data.required.forEach(id=>collectPrescriptionMedicine(scene.state,id));receivePrescriptionBag(scene.state);
-  scene.controls={reset(){}};scene.player={setVelocity(){}};scene.dialog={show(title,message,actions,options){Object.assign(this,{title,message,actions,options});}};
-  scene.beginPrescriptionHomecoming();assert.equal(scene.dialog.message,text.home);assert.deepEqual(scene.dialog.actions,[]);assert.equal(scene.dialog.options.required,true);assert.equal(scene.completing,true);assert.equal(scene.state.prescription.homeMessageSeen,true);
+  scene.controls={reset(){}};scene.player={setVelocity(){}};scene.hydrationHud={render(){}};scene.dialog={show(title,message,actions,options){Object.assign(this,{title,message,actions,options});},close(){}};
+  scene.beginPrescriptionHomecoming();assert.equal(scene.dialog.message,text.home);assert.equal(scene.dialog.actions.length,1);assert.notEqual(scene.completing,true);assert.equal(scene.state.prescription.homeMessageSeen,true);
+  assert.equal(scene.state.objective,'medicinePlan');assert.equal(scene.state.medicineMission.step,'intro');
 });

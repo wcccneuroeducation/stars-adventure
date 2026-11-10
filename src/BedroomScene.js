@@ -1,7 +1,7 @@
 import { createTextures } from './art.js';
 import { Controls } from './controls.js';
 import { drawBedroom } from './bedroom/art.js';
-import { ROOM, roomBounds, bedroomSolids, bedroomObjects, nearbyObject } from './bedroom/layout.js';
+import { ROOM, roomBounds, bedroomSolids, bedroomObjects, nearbyObject,medicineDesk } from './bedroom/layout.js';
 import { PhoneRing } from './bedroom/PhoneRing.js';
 import { sunnyDayText as text } from './scenarios/sunnyDayText.js';
 import { getSunnyDayState, startNewAdventure, collectItem, chooseOutfit, recordHomeDeparture } from './scenarios/sunnyDayState.js';
@@ -12,12 +12,17 @@ import { HydrationHud } from './ui/HydrationHud.js';
 import { inventoryItemLabel } from './ui/backpack.js';
 import { coldMorningText } from './scenarios/coldMorningText.js';
 import { prescriptionText } from './scenarios/prescriptionData.js';
+import { missionText } from './scenarios/medicineMissionData.js';
+import { MedicineMission } from './mission/MedicineMission.js';
+import { unlockMission,canUnlockMission } from './mission/model.js';
+import { pharmacyCompletionAdvice } from './mission/completion.js';
 const sunnyText=()=>text;
 
 export class BedroomScene extends Phaser.Scene {
   constructor() { super('Bedroom'); }
   create(data={}) {
     this.completing=false;
+    this.deskMarker=null;this.mission=null;
     document.querySelector('#status')?.remove();
     this.state = getSunnyDayState(this.registry);
     setBedroomChrome(this.state.adventure==='pharmacyPanic'?coldMorningText:text);
@@ -36,6 +41,7 @@ export class BedroomScene extends Phaser.Scene {
     this.cameras.main.setBounds(0,0,ROOM.width,ROOM.height).startFollow(this.player,true,.12,.12).setRoundPixels(true);
     this.controls = new Controls(this);
     this.dialog = new SceneDialog(this,this.controls);
+    if(this.state.adventure==='pharmacyPanic')this.mission=new MedicineMission(this);
     this.prompt = this.add.text(0,0,'',{fontFamily:'monospace',fontSize:12,color:'#fff0be',backgroundColor:'#294e4b',padding:{x:8,y:5}}).setOrigin(.5,1).setDepth(20);
     this.debugGraphics = this.add.graphics().setDepth(30).setVisible(false);
     this.debugGraphics.lineStyle(2,0xff6686).strokeRect(b.x,b.y,b.width,b.height);
@@ -56,6 +62,10 @@ export class BedroomScene extends Phaser.Scene {
     else if(this.state.adventure!=='pharmacyPanic'&&data.returnHome&&this.state.hasVisitedPark)this.beginHomecoming();
     else if (!this.state.callComplete) this.startCall();
     else document.querySelector('#game').focus({preventScroll:true});
+    if(canUnlockMission(this.state)){
+      this.deskMarker=this.add.text(640,192,'✦',{fontFamily:'monospace',fontSize:16,color:'#fff0ae',backgroundColor:'#456d62',padding:{x:4,y:2}}).setOrigin(.5).setDepth(15);
+      this.tweens.add({targets:this.deskMarker,alpha:.45,y:188,duration:900,yoyo:true,repeat:-1});
+    }
   }
   beginHomecoming(){
     if(this.state.completed)return;
@@ -63,10 +73,35 @@ export class BedroomScene extends Phaser.Scene {
     this.showCompletion();
   }
   beginPrescriptionHomecoming(){
-    this.completing=true;this.controls.reset();this.player.setVelocity(0);
+    this.controls.reset();this.player.setVelocity(0);
     this.state.prescription.homeMessageSeen=true;
-    // Stop at the handoff to the future medication-routine activity.
-    this.dialog.show(coldMorningText.title,prescriptionText.home,[],{required:true});
+    unlockMission(this.state);this.hydrationHud.render();
+    if(this.state.completed){this.showPharmacyCompletion();return;}
+    this.dialog.show(coldMorningText.title,prescriptionText.home,[{label:missionText.continue,run:()=>this.dialog.close()}]);
+  }
+  showPharmacyCompletion(){
+    if(!this.state.medicineMission?.completed)return;
+    this.completing=true;this.controls.reset();this.player.setVelocity(0);this.deskMarker?.setVisible(false);
+    this.state.completed=true;this.state.objective='pharmacyComplete';this.hydrationHud.render();
+    const content=document.createElement('div');content.className='completion-advice';
+    pharmacyCompletionAdvice(this.state).forEach(message=>{
+      const box=document.createElement('section');box.className='advice-box';const p=document.createElement('p');p.textContent=message;box.append(p);content.append(box);
+    });
+    const note=document.createElement('p');note.className='prescription-note';note.textContent=missionText.general;content.append(note);
+    this.dialog.show(missionText.adventureTitle,missionText.subtitle,[
+      {label:missionText.next,run:()=>this.dialog.show(missionText.adventureTitle,missionText.comingSoon,[
+        {label:missionText.selection,run:()=>this.showAdventureSelection()},
+        {label:missionText.back,run:()=>this.showPharmacyCompletion()}
+      ],{required:true})},
+      {label:missionText.selection,run:()=>this.showAdventureSelection()}
+    ],{required:true,content});
+  }
+  showAdventureSelection(){
+    this.dialog.show(missionText.selection,missionText.selectionPrompt,[
+      {label:coldMorningText.adventure1,run:()=>this.playAgain('sunnyDay')},
+      {label:coldMorningText.adventure2,run:()=>this.playAgain('pharmacyPanic')},
+      {label:missionText.back,run:()=>this.showPharmacyCompletion()}
+    ],{required:true});
   }
   showCompletion(){
     this.state.completed=true;this.state.objective='complete';this.hydrationHud.render();
@@ -101,6 +136,7 @@ export class BedroomScene extends Phaser.Scene {
     show();
   }
   interact(id) {
+    if(id==='medicineDesk'){this.mission?.open();return;}
     const text=this.state.adventure==='pharmacyPanic'?coldMorningText:sunnyText();
     const title=text.objects[id];
     const close={label:text.close,run:()=>this.dialog.close()};
@@ -142,11 +178,14 @@ export class BedroomScene extends Phaser.Scene {
     this.player.setVelocity(d.x*150,d.y*150);
     if(d.x)this.player.setFlipX(d.x<0);
     this.shadow.setPosition(this.player.x,this.player.y+12);
-    const object=nearbyObject(bedroomObjects,this.player.x,this.player.y+10,this.state.inventory);
+    const missionActive=canUnlockMission(this.state)&&!this.state.completed;
+    this.deskMarker?.setVisible(missionActive&&!this.completing);
+    const objects=missionActive?[medicineDesk,...bedroomObjects]:bedroomObjects;
+    const object=nearbyObject(objects,this.player.x,this.player.y+10,this.state.inventory);
     this.prompt.setVisible(Boolean(object)&&!this.dialog.open);
-    if(object)this.prompt.setText(`[ E ] ${text.objects[object.id]}`).setPosition(this.player.x,this.player.y-25);
+    if(object)this.prompt.setText(object.id==='medicineDesk'?missionText.desk:`[ E ] ${text.objects[object.id]}`).setPosition(this.player.x,this.player.y-25);
     if(this.nearId!==object?.id){
-      document.querySelector('#hint').textContent=object?text.nearObject(text.objects[object.id]):text.roomHint;
+      document.querySelector('#hint').textContent=object?(object.id==='medicineDesk'?missionText.deskHint:text.nearObject(text.objects[object.id])):text.roomHint;
       this.nearId=object?.id;
     }
     if(object&&pressed&&!this.dialog.open&&!this.completing)this.interact(object.id);
