@@ -1,6 +1,6 @@
 import { pixelRect } from '../pixel/tiles.js';
 import { pixelLabel } from '../pixel/buildings.js';
-import { PHARMACY } from './layout.js';
+import { PHARMACY,robotZone } from './layout.js';
 import { pharmacyText as text } from '../scenarios/pharmacyText.js';
 
 export function paintPharmacyExterior(ctx,h){
@@ -38,6 +38,7 @@ export function paintPharmacy(ctx){
   r(512,80,384,144,'#acc0ac');r(520,88,368,3,'#537f70');
   pixelLabel(ctx,text.robot,704,94,14,'#294c49');pixelLabel(ctx,text.inactive,704,113,9,'#46665e');
   r(536,128,48,48,'#4e7273');r(541,132,38,27,'#b7c9c0');r(548,139,8,5,'#456b6b');r(565,139,8,5,'#456b6b');
+  for(let i=0;i<2;i++){r(542+i*24,116,14,12,'#294e4b');r(545+i*24,118,8,7,'#71d096');}
   r(592,144,280,16,'#526867');for(let x=596;x<872;x+=16)r(x,146,3,12,'#8ba59b');
   for(const x of [616,680,744]){r(x,132,18,12,'#e4c58e');r(x+2,135,14,4,'#f3efd5');}
   for(let i=0;i<5;i++){
@@ -49,6 +50,10 @@ export function paintPharmacy(ctx){
   // Pharmacist behind the counter, in an upright white coat.
   r(342,200,20,20,'#bd8968');r(340,197,24,8,'#4b3c39');r(336,220,32,32,'#f1efda');r(350,223,3,25,'#7c9c96');r(357,226,6,5,'#58a57a');
   r(32,256,896,48,'#326d68');r(32,256,896,10,'#dfd7b7');r(40,270,880,4,'#528d7a');
+  // Mark the exact public interaction rectangle without adding a solid barrier.
+  const z=robotZone;
+  for(let x=z.x;x<z.x+z.width;x+=8){const colour=(x-z.x)%16?'#293e44':'#e5c764';r(x,z.y,8,4,colour);r(x,z.y+z.height-4,8,4,colour);}
+  for(let y=z.y;y<z.y+z.height;y+=8){const colour=(y-z.y)%16?'#293e44':'#e5c764';r(z.x,y,4,8,colour);r(z.x+z.width-4,y,4,8,colour);}
   r(392,243,32,13,'#354e51');r(397,230,22,15,'#4a6769');r(400,232,16,10,'#9cbfae');
   // Public waiting chairs and consultation door are separate from dispensing.
   pixelLabel(ctx,text.waiting,680,566,11,'#365951');

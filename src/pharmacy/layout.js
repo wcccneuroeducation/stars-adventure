@@ -10,9 +10,10 @@ export const pharmacySolids=[
   {x:96,y:384,width:64,height:160},{x:800,y:384,width:64,height:160},
   {x:608,y:592,width:144,height:36},{x:32,y:592,width:24,height:96}
 ];
+export const robotZone={id:'robot',x:608,y:304,width:256,height:64};
 export const pharmacyObjects=[
   {id:'pharmacist',x:288,y:304,width:128,height:64},
-  {id:'robot',x:608,y:304,width:256,height:64}, // Public side of the counter.
+  robotZone, // Public side of the counter; artwork uses this same rectangle.
   {id:'exit',x:432,y:688,width:96,height:48}
 ];
 export const nearbyPharmacyObject=(x,y)=>pharmacyObjects.find(r=>x>=r.x&&x<r.x+r.width&&y>=r.y&&y<r.y+r.height);

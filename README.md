@@ -215,6 +215,16 @@ The first five boxes cover all five categories in shuffled order; the next five 
 
 Verification: 83 automated tests pass. Real browser tests covered the malfunction, all categories and ten-box completion, incorrect retry/Hint, desktop dragging, keyboard selection, close/reopen with saved explanation, completion dialogue, pharmacy re-entry and no automatic restart. A touch-enabled 1024 × 768 browser completed all ten boxes using tap selection/bin controls, with optional audio running and no console errors. Physical iPad/Safari and audible sound quality still need manual review. No prescription-collection mini-game has been implemented. Hard-refresh to load the update.
 
+## MED-BOT enhancements: twelve-box challenge
+
+The current challenge supersedes the ten-box list above. Its editable medicine data in `src/scenarios/robotRescueData.js` now contains Penicillin, Folic acid, Hydroxycarbamide, Paracetamol, Ibuprofen, Morphine, Cetirizine, Omeprazole and Salbutamol inhaler, with the requested explanations and optional hints. The fifth bin is **Other / Ask Pharmacist**; its medicines have different usual purposes from the four named categories, rather than being classified as dangerous or unsuitable. No doses or individual treatment recommendations are added.
+
+`src/robot/model.js` shuffles all nine medicines, followed by three distinct repeats, avoiding consecutive identical boxes. Existing correct-feedback/Continue, retries, controls, saving and completion behaviour is unchanged. All twelve boxes must be sorted to finish.
+
+`src/robot/lights.js` derives the lights from actual saved progress: unavailable/inactive or completed means steady green; available and unfinished means alternating red. Each red light flashes on a 500ms cycle, offset by 250ms. `RobotDisplay.js` draws two top-mounted lights in the pharmacy; `SortingGame.js`, `PharmacyScene.js` and CSS use the same state for the interface/celebration. Pharmacy artwork supplies the inactive green lights, including in Adventure 1. The yellow-and-black floor border is drawn directly from the shared `robotZone` rectangle in `pharmacy/layout.js`, so its 256 × 64 outline matches the interaction area exactly without adding a collision barrier.
+
+Verification: 86 automated tests pass, covering nine-medicine coverage, twelve-box length, repeated pain/Other categories, explanations, retries, completion locks, saved-state light phases and the short malfunction shake after waiting beside an inactive robot. Browser checks completed twelve boxes with dragging/keyboard and with landscape touch, verified persistent explanations and flashing/steady UI lights, then re-entered the pharmacy to confirm green lights and no restart. Physical iPad/Safari testing remains necessary. Hard-refresh before testing the expanded list.
+
 ## GitHub Pages after review
 
 After reviewing and committing the files, use **Settings → Pages → Deploy from a branch**, select the desired branch and **/ (root)**. Paths are relative and work under a repository URL. No build configuration is needed. This task does not commit or push changes.

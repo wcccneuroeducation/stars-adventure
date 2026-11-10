@@ -4,7 +4,7 @@ function shuffle(values,random){
 }
 export function rescueState(state,random=Math.random){
   if(!state.robotRescue){
-    const ids=medicines.map(m=>m.id),first=shuffle(ids,random),second=shuffle(ids,random);
+    const ids=medicines.map(m=>m.id),first=shuffle(ids,random),second=shuffle(ids,random).slice(0,3);
     if(first.at(-1)===second[0])[second[0],second[1]]=[second[1],second[0]];
     state.robotRescue={sequence:[...first,...second],index:0,available:false,completed:false,incorrect:false,feedbackMedicine:null,audioEnabled:false,celebrationSeen:false};
   }

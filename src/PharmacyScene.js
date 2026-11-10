@@ -14,6 +14,7 @@ import { robotText } from './scenarios/robotRescueData.js';
 import { rescueState } from './robot/model.js';
 import { SortingGame } from './robot/SortingGame.js';
 import { RobotDisplay } from './robot/RobotDisplay.js';
+import { addRobotLights } from './robot/lights.js';
 
 export class PharmacyScene extends Phaser.Scene{
   constructor(){super('Pharmacy');}
@@ -68,6 +69,7 @@ export class PharmacyScene extends Phaser.Scene{
       if(page===0){
         content=document.createElement('div');
         const robot=document.createElement('div');robot.className='sorting-robot repaired';robot.textContent=robotText.robot;
+        addRobotLights(robot,p);
         const progress=document.createElement('progress');progress.className='repair-progress';progress.max=1;progress.value=1;progress.setAttribute('aria-label',robotText.progress);
         const belt=document.createElement('div');belt.className='sorting-belt stopped';belt.textContent=robotText.complete;
         content.append(robot,progress,belt);

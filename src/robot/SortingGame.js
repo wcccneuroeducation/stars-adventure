@@ -1,5 +1,6 @@
 import { medicines,sortingBins,robotText as text } from '../scenarios/robotRescueData.js';
 import { rescueState,currentMedicine,sortMedicine,continueSorting } from './model.js';
+import { addRobotLights,robotLightState } from './lights.js';
 
 export class SortingGame{
   constructor(scene){
@@ -26,6 +27,7 @@ export class SortingGame{
     const content=document.createElement('div');content.className='robot-rescue';
     const make=(tag,className,message)=>{const el=document.createElement(tag);el.className=className;if(message)el.textContent=message;return el;};
     const robot=make('div','sorting-robot',text.robot);robot.setAttribute('aria-hidden','true');content.append(robot);
+    addRobotLights(robot,this.progress);
     const label=make('label','repair-label',text.progress);const progress=make('progress','repair-progress');progress.max=this.progress.sequence.length;progress.value=this.progress.index;progress.setAttribute('aria-label',text.progress);content.append(label,progress);
     const belt=make('div',this.progress.completed?'sorting-belt stopped':'sorting-belt');const box=make('button','medicine-box');box.type='button';box.draggable=true;
     const feedback=this.progress.feedbackMedicine&&medicines.find(m=>m.id===this.progress.feedbackMedicine);
@@ -53,7 +55,7 @@ export class SortingGame{
           animation.onfinish=()=>flight.remove();animation.oncancel=()=>flight.remove();
           this.selected=false;box.draggable=false;box.disabled=true;box.classList.add('sorted-box');button.classList.add('receiving-box');
           this.binButtons.forEach(b=>b.disabled=true);hint.hidden=true;status.textContent=medicine.explanation;progress.value=this.progress.index;next.hidden=false;next.focus();this.tone();
-          if(this.progress.completed){belt.classList.add('stopped');robot.classList.add('repaired');this.scene.hydrationHud.render();}
+          if(this.progress.completed){belt.classList.add('stopped');robot.classList.add('repaired');robot.dataset.lightState=robotLightState(this.progress);this.scene.hydrationHud.render();}
         }
       };
       button.addEventListener('click',attempt);button.addEventListener('dragover',e=>{if(!button.disabled)e.preventDefault();});

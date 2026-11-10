@@ -4,14 +4,18 @@ export const sortingBins=[
   {id:'cells',label:'Support red blood cells'},
   {id:'complications',label:'Reduce sickle cell complications'},
   {id:'pain',label:'Manage pain'},
-  {id:'ask',label:'Ask the pharmacist'}
+  {id:'ask',label:'Other / Ask Pharmacist'}
 ];
 export const medicines=[
   {id:'penicillin',name:'Penicillin',bin:'infection',explanation:'Penicillin helps protect against certain bacterial infections.',hint:'Think about protection from bacteria.'},
   {id:'folic',name:'Folic acid',bin:'cells',explanation:'Folic acid helps your body make red blood cells.',hint:'Think about making red blood cells.'},
-  {id:'hydroxy',name:'Hydroxycarbamide',bin:'complications',explanation:'Hydroxycarbamide can reduce painful episodes and other complications of sickle cell disease.',hint:'Think about reducing sickle cell complications.'},
-  {id:'relief',name:'Prescribed pain relief',bin:'pain',explanation:'Pain relief helps manage pain when used according to your care plan.',hint:'Think about managing pain according to a care plan.'},
-  {id:'unknown',name:'Unknown or unlabelled medicine',bin:'ask',explanation:"If you don't recognise a medicine or aren't sure what it is, always check with a pharmacist or healthcare professional.",hint:'Who can help when a medicine is unfamiliar?'}
+  {id:'hydroxy',name:'Hydroxycarbamide',bin:'complications',explanation:'Hydroxycarbamide can reduce painful episodes and other complications.',hint:'Think about reducing sickle cell complications.'},
+  {id:'paracetamol',name:'Paracetamol',bin:'pain',explanation:'Paracetamol is a medicine used to help relieve pain.',hint:'Think about relieving pain.'},
+  {id:'ibuprofen',name:'Ibuprofen',bin:'pain',explanation:"Ibuprofen helps relieve pain and inflammation. It isn't suitable for everyone, including some people with kidney problems.",hint:'Think about pain and inflammation.'},
+  {id:'morphine',name:'Morphine',bin:'pain',explanation:'Morphine is a strong pain medicine used for more severe pain under an individual treatment plan.',hint:'Think about managing more severe pain under a treatment plan.'},
+  {id:'cetirizine',name:'Cetirizine',bin:'ask',explanation:'Cetirizine is an antihistamine commonly used for allergies.',hint:'Allergies are a different usual purpose from the four named categories. You can ask the pharmacist.'},
+  {id:'omeprazole',name:'Omeprazole',bin:'ask',explanation:'Omeprazole reduces stomach acid.',hint:'Reducing stomach acid is a different usual purpose from the four named categories.'},
+  {id:'salbutamol',name:'Salbutamol inhaler',bin:'ask',explanation:'Salbutamol helps open the airways in conditions such as asthma.',hint:'Opening the airways is a different usual purpose from the four named categories.'}
 ];
 export const robotText={
   title:'MED-BOT 3000 · Robot Rescue',robot:'MED-BOT 3000',error:'SORTING ERROR!',complete:'SORTING COMPLETE!',
