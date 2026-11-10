@@ -7,6 +7,7 @@ export const canDrink = state => bottleSips(state) > 0 && state.hydration < 100;
 
 export function drinkWater(state) {
   if (!canDrink(state)) return false;
+  state.lowestHydration=Math.min(state.lowestHydration??state.hydration,state.hydration);
   state.hydration = clampHydration(state.hydration + settings.drinkAmount);
   state.waterSips = bottleSips(state) - 1;
   return true; // Keep the bottle in inventory, including when empty.
@@ -17,6 +18,7 @@ export function advanceHydration(state, movementMs, context) {
   const elapsed = Number.isFinite(movementMs) ? Math.max(0, movementMs) : 0;
   const multiplier=context.rateMultiplier ?? 1;
   state.hydration = clampHydration(state.hydration - elapsed / 1000 * settings.pointsPerSecond * multiplier);
+  state.lowestHydration=Math.min(state.lowestHydration??state.hydration,state.hydration);
   return elapsed;
 }
 

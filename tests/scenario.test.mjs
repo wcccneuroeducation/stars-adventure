@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
 import { ParkVisitClock } from '../src/scenarios/ParkVisitClock.js';
 import { scenarioSettings } from '../src/settings/scenario.js';
-import { getSunnyDayState,collectItem } from '../src/scenarios/sunnyDayState.js';
+import { getSunnyDayState,collectItem,recordHomeDeparture } from '../src/scenarios/sunnyDayState.js';
+import { completionAdvice } from '../src/scenarios/completionAdvice.js';
+import { advanceHydration,drinkWater } from '../src/mechanics/hydration.js';
 import { sunnyDayText as text } from '../src/scenarios/sunnyDayText.js';
 import { homeZone,obstacles } from '../src/world.js';
 globalThis.Phaser={Scene:class{}};
@@ -63,13 +65,33 @@ test('front-door zone is reachable outside the original house collision boundary
   const x=208,y=368;assert.ok(x>=homeZone.x&&x<homeZone.x+homeZone.width&&y+10>=homeZone.y&&y+10<homeZone.y+homeZone.height);
   assert.ok(!obstacles.some(r=>x-9<r.x+r.width&&x+9>r.x&&y+4<r.y+r.height&&y+16>r.y));
 });
-test('homecoming completes without grading; Play Again resets the shared adventure',()=>{
+test('homecoming shows three advice boxes once and Next Adventure opens only the placeholder',()=>{
+  globalThis.document={createElement:tag=>({tag,children:[],append(child){this.children.push(child);}})};
   const s=new BedroomScene();s.registry=registry();s.state=getSunnyDayState(s.registry);collectItem(s.state,'water');
   s.state.waterSips=1;s.state.hydration=22;s.state.objective='headHome';s.state.hasVisitedPark=true;s.state.callComplete=true;s.state.footballThoughts.thirsty=true;
   s.controls={reset(){}};s.player={setVelocity(){}};s.hydrationHud={render(){}};
   s.dialog={show(title,message,actions,options){Object.assign(this,{title,message,actions,options});},close(){}};s.scene={restart(){s.restarted=true;}};
-  s.beginHomecoming();assert.equal(s.dialog.message,text.homeWelcome);s.dialog.actions[0].run();assert.equal(s.dialog.title,text.completeTitle);assert.equal(s.state.completed,true);
-  s.dialog.actions.find(a=>a.label===text.finish).run();assert.equal(s.dialog.message,text.finishMessage);assert.deepEqual(s.dialog.actions,[]);assert.equal(s.restarted,undefined);
-  s.showCompletion();s.dialog.actions.find(a=>a.label===text.playAgain).run();
+  s.beginHomecoming();assert.equal(s.dialog.message,text.completeMessage);assert.equal(s.dialog.title,text.completeTitle);assert.equal(s.state.completed,true);
+  assert.equal(s.dialog.options.content.children.length,3);assert.deepEqual(s.dialog.actions.map(a=>a.label),[text.nextAdventure]);
+  s.dialog.actions[0].run();assert.equal(s.dialog.message,text.comingSoon);assert.deepEqual(s.dialog.actions,[]);assert.equal(s.restarted,undefined);
+  s.beginHomecoming();assert.equal(s.dialog.message,text.comingSoon);
+  s.playAgain();
   const fresh=getSunnyDayState(s.registry);assert.equal(s.restarted,true);assert.notEqual(fresh,s.state);assert.equal(fresh.hydration,100);assert.deepEqual(fresh.inventory,[]);assert.equal(fresh.waterSips,0);assert.equal(fresh.callComplete,false);assert.equal(fresh.completed,false);assert.equal(fresh.hasVisitedPark,false);assert.equal(fresh.objective,'explore');assert.deepEqual(fresh.footballThoughts,{thirsty:false,tired:false});
+});
+
+test('advice follows the first departure, chosen breaks and hat without adding items',()=>{
+  const state=getSunnyDayState(registry()),t=text.completionAdvice;
+  recordHomeDeparture(state);collectItem(state,'water');collectItem(state,'hat');recordHomeDeparture(state);
+  let boxes=completionAdvice(state);assert.equal(boxes.length,3);assert.equal(boxes[0][0],t.waterForgotten);assert.deepEqual(boxes[1],[t.noRest,t.noHat]);
+  const prepared=getSunnyDayState(registry());collectItem(prepared,'water');collectItem(prepared,'hat');recordHomeDeparture(prepared);prepared.rested=true;
+  boxes=completionAdvice(prepared);assert.equal(boxes[0][0],t.waterTaken);assert.deepEqual(boxes[1],[t.rested,t.hatTaken]);
+});
+
+test('lowest hydration survives drinking and scene-state reuse, including the exact 30 boundary',()=>{
+  const r=registry(),state=getSunnyDayState(r),context={outdoors:true,moving:true,focused:true};collectItem(state,'water');
+  advanceHydration(state,42000,context);assert.ok(state.hydration<30);const low=state.hydration;
+  drinkWater(state);drinkWater(state);assert.ok(state.hydration>30);assert.equal(state.lowestHydration,low);
+  assert.equal(getSunnyDayState(r).lowestHydration,low);assert.equal(completionAdvice(state)[2][0],text.completionAdvice.lowHydration);
+  state.lowestHydration=30;assert.equal(completionAdvice(state)[2][0],text.completionAdvice.lowHydration);
+  state.lowestHydration=30.01;assert.equal(completionAdvice(state)[2][0],text.completionAdvice.regularDrinking);
 });

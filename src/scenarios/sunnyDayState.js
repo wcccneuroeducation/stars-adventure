@@ -15,11 +15,13 @@ export function getSunnyDayState(registry) {
   if (state.waterSips === undefined) state.waterSips = state.inventory.includes('water') ? BOTTLE_CAPACITY : 0;
   state.footballThoughts ??= {thirsty:false,tired:false};
   state.objective ??= 'explore';state.hasVisitedPark ??= false;state.completed ??= false;
+  state.departureItems ??= null;state.rested ??= false;state.lowestHydration ??= state.hydration;
   return state;
 }
 
 export function startNewAdventure(registry) {
   const state = { inventory: [], outfit: 'everyday', callComplete: false, hydration: hydrationSettings.initial, waterSips: 0, footballThoughts:{thirsty:false,tired:false}, objective:'explore',hasVisitedPark:false,completed:false };
+  Object.assign(state,{departureItems:null,rested:false,lowestHydration:hydrationSettings.initial});
   registry.set(KEY, state);
   return state;
 }
@@ -29,6 +31,11 @@ export function collectItem(state, id) {
   state.inventory.push(id);
   if (id === 'water') state.waterSips = BOTTLE_CAPACITY;
   return true;
+}
+
+// Snapshot the first departure, so later home visits cannot change the advice.
+export function recordHomeDeparture(state){
+  state.departureItems ??= [...state.inventory];
 }
 
 export function chooseOutfit(state, id, outfits) {

@@ -97,6 +97,7 @@ export class ParkScene extends StreetScene {
     }
     if(id==='bench')this.menu.show(parkText.objects.bench,parkText.bench,[{
       label:parkText.sit,run:()=>{
+        this.state.rested=true;
         this.restPosition={x:this.player.x,y:this.player.y};this.resting=true;
         this.player.setVelocity(0);this.player.body.enable=false;
         this.player.setTexture('player').setPosition(seating.x+seating.width/2,seating.y+4);

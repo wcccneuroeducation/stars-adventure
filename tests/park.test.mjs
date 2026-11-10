@@ -50,6 +50,7 @@ test('park reuses outdoor movement depletion and pauses it for menus, standing a
   const saved=scene.state.hydration;
   for(let i=0;i<60;i++)scene.physics.world.emit('worldstep',1/60);assert.equal(scene.state.hydration,saved);
   scene.interact('bench');scene.menu.actions[0].run();assert.equal(scene.resting,true);
+  assert.equal(scene.state.rested,true);
   assert.equal(scene.player.body.enable,false);assert.equal(scene.player.x,656);
   for(let i=0;i<60;i++){scene.player.body.y-=2.5;scene.physics.world.emit('worldstep',1/60);}
   assert.equal(scene.state.hydration,saved);

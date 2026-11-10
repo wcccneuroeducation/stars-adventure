@@ -6,3 +6,4 @@
 .scenario-dialog button:disabled{opacity:.45;cursor:not-allowed}
 .football-score{font-weight:700;white-space:nowrap;align-self:center;color:#f6e6b5;font-variant-numeric:tabular-nums}
 .adventure-status{flex-wrap:wrap}.adventure-objective{flex-basis:100%;font-size:11px;color:#e8d8ad}@media(max-height:600px) and (orientation:landscape){.adventure-status~#game{max-height:calc(100dvh - 148px)}}
+.completion-advice{display:grid;gap:10px}.scenario-dialog .advice-box{padding:10px 12px;border:2px solid #7d9b88;background:#edf3df;box-shadow:3px 3px 0 #c5d0b5}.scenario-dialog .advice-box p{margin:0;font-size:14px;line-height:1.4}.scenario-dialog .advice-box p+p{margin-top:8px}

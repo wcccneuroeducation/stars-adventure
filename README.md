@@ -161,6 +161,14 @@ Verification for this change: 64 automated Node tests pass. Real headless Edge/P
 
 The earlier football guide's description of rest ending a match is superseded by the resumable break above; **Leave football** still ends the match. Reloading and Play Again both start a new adventure.
 
+## Personalised completion update
+
+Returning to the original home after visiting the park now opens **Adventure Complete!** with three advice boxes and **Next Adventure**. The boxes cover water, rest (combined with the existing sun-hat choice), and hydration. Next Adventure shows **Coming Soon — Pharmacy Panic!**; it does not start another scene. This replaces the earlier Play Again/Finish completion interface.
+
+`sunnyDayState.js` snapshots inventory on the first bedroom departure and persists chosen breaks and lowest hydration across scenes. `hydration.js` records the minimum during existing depletion without changing the depletion/drinking rules. The bench and football rest handlers record chosen breaks; a forced football stop alone does not count as rest. `completionAdvice.js` selects the three boxes using copy in `sunnyDayText.js`; `BedroomScene.js` renders them using the existing dialog and a small CSS addition. Hat advice shares the rest box. The completion is guarded against repeat triggering and does not overwrite the recorded choices on homecoming.
+
+To review, hard-refresh and complete separate runs with/without water and with/without choosing rest. Compare the advice, including after drinking to recover from a low indicator. Exactly 30% or below at any point selects the low-indicator reminder even if the final value is higher. Check that the opening bedroom does not show completion and that Next Adventure displays only the placeholder. On smaller landscape screens, the existing dialog scrolls to keep all copy and the button accessible. Run `npm test` for automated regression coverage; physical iPad testing remains necessary.
+
 ## GitHub Pages after review
 
 After reviewing and committing the files, use **Settings → Pages → Deploy from a branch**, select the desired branch and **/ (root)**. Paths are relative and work under a repository URL. No build configuration is needed. This task does not commit or push changes.

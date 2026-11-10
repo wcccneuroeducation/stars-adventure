@@ -74,6 +74,7 @@ export class FootballActivity {
   }
   takeRest(water=false){
     if(this.scene.visitClock?.expired){this.stop();this.scene.menu.close();return;}
+    this.scene.state.rested=true;
     this.pauseForRest();this.showRest();
     if(water)this.openRestBackpack();
   }

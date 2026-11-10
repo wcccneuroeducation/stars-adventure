@@ -4,7 +4,8 @@ import { drawBedroom } from './bedroom/art.js';
 import { ROOM, roomBounds, bedroomSolids, bedroomObjects, nearbyObject } from './bedroom/layout.js';
 import { PhoneRing } from './bedroom/PhoneRing.js';
 import { sunnyDayText as text } from './scenarios/sunnyDayText.js';
-import { getSunnyDayState, startNewAdventure, collectItem, chooseOutfit } from './scenarios/sunnyDayState.js';
+import { getSunnyDayState, startNewAdventure, collectItem, chooseOutfit, recordHomeDeparture } from './scenarios/sunnyDayState.js';
+import { completionAdvice } from './scenarios/completionAdvice.js';
 import { SceneDialog } from './ui/SceneDialog.js';
 import { setBedroomChrome } from './ui/sceneChrome.js';
 import { HydrationHud } from './ui/HydrationHud.js';
@@ -53,15 +54,21 @@ export class BedroomScene extends Phaser.Scene {
     else document.querySelector('#game').focus({preventScroll:true});
   }
   beginHomecoming(){
+    if(this.state.completed)return;
     this.completing=true;this.controls.reset();this.player.setVelocity(0);
-    this.dialog.show(text.subtitle,text.homeWelcome,[{label:text.continue,run:()=>this.showCompletion()}],{required:true});
+    this.showCompletion();
   }
   showCompletion(){
     this.state.completed=true;this.state.objective='complete';this.hydrationHud.render();
+    const content=document.createElement('div');content.className='completion-advice';
+    completionAdvice(this.state).forEach(paragraphs=>{
+      const box=document.createElement('section');box.className='advice-box';
+      paragraphs.forEach(message=>{const p=document.createElement('p');p.textContent=message;box.append(p);});
+      content.append(box);
+    });
     this.dialog.show(text.completeTitle,text.completeMessage,[
-      {label:text.playAgain,run:()=>this.playAgain()},
-      {label:text.finish,run:()=>this.dialog.show(text.completeTitle,text.finishMessage,[],{required:true})}
-    ],{required:true});
+      {label:text.nextAdventure,run:()=>this.dialog.show(text.completeTitle,text.comingSoon,[],{required:true})}
+    ],{required:true,content});
   }
   playAgain(){
     this.controls.reset();this.player.setVelocity(0);startNewAdventure(this.registry);
@@ -106,7 +113,7 @@ export class BedroomScene extends Phaser.Scene {
       this.dialog.show(title,this.state.inventory.length?text.inventoryIntro:text.emptyBackpack,[close],{content:this.state.inventory.length?list:null});
     }
     if(id==='door') this.dialog.show(title,text.door,[{
-      label:text.leaveRoom,run:()=>{this.dialog.close();this.scene.start('BirminghamStreet',{entry:'home'});}
+      label:text.leaveRoom,run:()=>{recordHomeDeparture(this.state);this.dialog.close();this.scene.start('BirminghamStreet',{entry:'home'});}
     },{label:text.stay,run:()=>this.dialog.close()}]);
   }
   toggleDebug() {

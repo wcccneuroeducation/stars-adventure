@@ -102,13 +102,13 @@ test('all three tiredness choices work and a later prompt offers stopping again'
 test('voluntary rest preserves score, pauses play, and supports resuming or leaving',()=>{
   const {activity,scene}=activityFixture();activity.start();activity.model.score.blue=2;
   activity.model.movementMs=12000;
-  const saved=JSON.stringify(scene.state);activity.takeRest();
+  const saved={...scene.state,rested:true};activity.takeRest();
   assert.equal(activity.active,false);assert.equal(activity.resting,true);assert.equal(scene.hydrationRateMultiplier,1);
   assert.ok(scene.menu.message.startsWith(copy.restMessage));assert.equal(scene.player.x,1100);
   activity.recordMovement(5000);assert.equal(activity.model.movementMs,12000);
   activity.resume();assert.equal(activity.active,true);assert.equal(activity.resting,false);
   assert.equal(activity.model.score.blue,2);assert.equal(activity.model.movementMs,12000);
-  assert.equal(scene.hydrationRateMultiplier,config.hydrationMultiplier);assert.equal(JSON.stringify(scene.state),saved);
+  assert.equal(scene.hydrationRateMultiplier,config.hydrationMultiplier);assert.deepEqual(scene.state,saved);
   activity.takeRest();activity.stop();assert.equal(activity.model.active,false);assert.equal(activity.resting,false);
 });
 
