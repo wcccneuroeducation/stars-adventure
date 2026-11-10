@@ -22,11 +22,11 @@ import { scenarioSettings } from './settings/scenario.js';
 export class ParkScene extends StreetScene {
   constructor(){super('Park');}
   create(data={}){
-    this.visitClock=getSunnyDayState(this.registry).adventure==='pharmacyPanic'?null:new ParkVisitClock(scenarioSettings.parkVisitMs,data.visitStartedAt??performance.now());
+    this.visitClock=getSunnyDayState(this.registry).adventure==='sunnyDay'?new ParkVisitClock(scenarioSettings.parkVisitMs,data.visitStartedAt??performance.now()):null;
     this.visitEndingShown=false;this.pendingVisitEnding=false;this.visitPaused=false;
     document.querySelector('#status')?.remove();setParkChrome(parkText);
     this.state=getSunnyDayState(this.registry);this.resting=false;this.nearId=undefined;
-    if(this.state.adventure!=='pharmacyPanic')this.state.hasVisitedPark=true;
+    if(this.state.adventure==='sunnyDay')this.state.hasVisitedPark=true;
     if(!this.textures.exists('player'))createTextures(this);
     drawPark(this);
     this.waitingFriends=drawWaitingFriends(this);

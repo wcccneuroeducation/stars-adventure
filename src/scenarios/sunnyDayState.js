@@ -1,13 +1,15 @@
 import { hydrationSettings } from '../settings/hydration.js';
 import { BOTTLE_CAPACITY } from '../mechanics/waterBottle.js';
+import { createSchoolDay } from '../school/dayModel.js';
 const KEY = 'kickstart.sunnyDay';
 const COLD_KEY='kickstart.pharmacyPanic';
+const SCHOOL_KEY='kickstart.schoolDay';
 export const ITEM_IDS = ['water', 'hat'];
 
 // Phaser's registry outlives individual scenes. A page reload starts a new run.
 export function getSunnyDayState(registry) {
   const adventure=registry.get('kickstart.activeAdventure')??'sunnyDay';
-  const key=adventure==='pharmacyPanic'?COLD_KEY:KEY;
+  const key=adventure==='schoolDay'?SCHOOL_KEY:adventure==='pharmacyPanic'?COLD_KEY:KEY;
   if (!registry.has(key)) {
     startNewAdventure(registry,adventure);
   }
@@ -27,8 +29,9 @@ export function startNewAdventure(registry,adventure='sunnyDay') {
   Object.assign(state,{departureItems:null,rested:false,lowestHydration:hydrationSettings.initial});
   Object.assign(state,{adventure,warmClothing:false,wearingHat:false,warmClothingOnDeparture:null,drankWater:false,pharmacyArrived:false,introFinished:false});
   if(adventure==='pharmacyPanic')state.objective='collectPrescription';
+  if(adventure==='schoolDay'){state.objective='schoolTimetable';state.callComplete=true;state.schoolDay=createSchoolDay();}
   registry.set('kickstart.activeAdventure',adventure);
-  registry.set(adventure==='pharmacyPanic'?COLD_KEY:KEY, state);
+  registry.set(adventure==='schoolDay'?SCHOOL_KEY:adventure==='pharmacyPanic'?COLD_KEY:KEY, state);
   return state;
 }
 

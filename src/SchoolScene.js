@@ -9,6 +9,8 @@ import { streetText } from './scenarios/streetText.js';
 import { schoolText as text } from './scenarios/schoolText.js';
 import { SCHOOL,schoolSolids,schoolLocation } from './school/layout.js';
 import { drawSchool } from './school/art.js';
+import { ensureSchoolDay } from './school/SchoolDayRuntime.js';
+import { schoolDayText } from './scenarios/schoolDayText.js';
 
 // Location-only scene: rooms/courtyard connect through walk-through doorways.
 export class SchoolScene extends Phaser.Scene{
@@ -30,6 +32,7 @@ export class SchoolScene extends Phaser.Scene{
       onBackpack:()=>{if(!this.menu.open)openBackpack(this.menu,this.state,()=>this.hydrationHud.render());},
       onPause:()=>{if(!this.menu.open)this.menu.show(streetText.paused,streetText.pausedMessage,[{label:streetText.resume,run:()=>this.menu.close()}]);}
     }); // Preserve shared state; no school lessons, adventure timers or exertion.
+    this.schoolDay=ensureSchoolDay(this);
     this.prompt=this.add.text(800,2096,text.exit,{fontFamily:'monospace',fontSize:12,color:'#fff0be',backgroundColor:'#294e4b',padding:{x:8,y:6}}).setOrigin(.5,1).setDepth(20).setVisible(false);
     this.debug=this.add.graphics().setDepth(30).setVisible(false);this.debug.lineStyle(2,0xff6686);
     schoolSolids.forEach(r=>this.debug.strokeRect(r.x,r.y,r.width,r.height));
@@ -50,9 +53,13 @@ export class SchoolScene extends Phaser.Scene{
     const d=busy?{x:0,y:0}:this.controls.direction();this.player.setVelocity(d.x*150,d.y*150);if(d.x)this.player.setFlipX(d.x<0);
     this.shadow.setPosition(this.player.x,this.player.y+12);
     const z=SCHOOL.exit,near=this.player.x>=z.x&&this.player.x<z.x+z.width&&this.player.y+10>=z.y&&this.player.y+10<z.y+z.height;
-    this.prompt.setVisible(near&&!busy);
+    const checkIn=this.schoolDay?.canCheckIn();
+    this.prompt.setVisible((near||Boolean(checkIn))&&!busy);
+    if(near)this.prompt.setText(text.exit).setPosition(800,2096);
+    else if(checkIn)this.prompt.setText(schoolDayText.arrivalPrompt).setPosition(this.player.x,this.player.y-25);
     const location=schoolLocation(this.player.x,this.player.y+10);
     if(location!==this.location||near!==this.wasNear){document.querySelector('#hint').textContent=near?text.exitHint:text.locations[location];this.location=location;this.wasNear=near;}
     if(near&&pressed&&!busy)this.leave();
+    else if(pressed&&!busy)this.schoolDay?.interactArrival();
   }
 }

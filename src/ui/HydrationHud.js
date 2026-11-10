@@ -6,6 +6,7 @@ import { robotText } from '../scenarios/robotRescueData.js';
 import { prescriptionText } from '../scenarios/prescriptionData.js';
 import { openPrescriptionCard } from '../prescription/card.js';
 import { missionText } from '../scenarios/medicineMissionData.js';
+import { schoolDayText } from '../scenarios/schoolDayText.js';
 
 export class HydrationHud {
   constructor(scene, state, { onBackpack, onPause } = {}) {
@@ -47,7 +48,7 @@ export class HydrationHud {
     }
     if(this.objectiveElement){
       const objective=this.state.objective||'explore';
-      const prescriptionLabels={findPrescription:prescriptionText.findObjective,returnPharmacist:prescriptionText.returnObjective,takePrescriptionHome:prescriptionText.homeObjective,medicinePlan:missionText.objective,pharmacyComplete:missionText.adventureTitle};
+      const prescriptionLabels={findPrescription:prescriptionText.findObjective,returnPharmacist:prescriptionText.returnObjective,takePrescriptionHome:prescriptionText.homeObjective,medicinePlan:missionText.objective,pharmacyComplete:missionText.adventureTitle,schoolTimetable:schoolDayText.objective};
       const label=prescriptionLabels[objective]??(objective==='collectPrescription'?coldMorningText.objective:objective==='repairRobot'?robotText.repairObjective:objective==='prescriptionCollection'?robotText.prescriptionObjective:sunnyDayText.objectives[objective]);
       if(this.lastObjective!==objective){this.objectiveElement.textContent=sunnyDayText.objectiveLabel(label);this.lastObjective=objective;}
     }
