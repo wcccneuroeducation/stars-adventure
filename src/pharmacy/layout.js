@@ -12,6 +12,7 @@ export const pharmacySolids=[
 ];
 export const pharmacyObjects=[
   {id:'pharmacist',x:288,y:304,width:128,height:64},
+  {id:'robot',x:608,y:304,width:256,height:64}, // Public side of the counter.
   {id:'exit',x:432,y:688,width:96,height:48}
 ];
 export const nearbyPharmacyObject=(x,y)=>pharmacyObjects.find(r=>x>=r.x&&x<r.x+r.width&&y>=r.y&&y<r.y+r.height);

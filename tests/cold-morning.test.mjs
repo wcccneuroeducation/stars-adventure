@@ -34,11 +34,12 @@ test('cold phone uses the existing two-page call and stops at bedroom exploratio
   s.add={text:()=>label};s.tweens={add:()=>({stop(){}})};s.dialog={show(title,message,actions){Object.assign(this,{title,message,actions});},close(){}};
   s.startCall();assert.equal(s.dialog.message,text.call[0]);s.dialog.actions[0].run();assert.equal(s.dialog.message,text.call[1]);s.dialog.actions[0].run();assert.equal(s.state.callComplete,true);
 });
-test('cold pharmacist stops after the robot observation, without changing the objective or starting gameplay',()=>{
+test('cold pharmacist triggers the malfunction only after the robot observation',()=>{
   const s=new PharmacyScene();s.state=startNewAdventure(registry(),'pharmacyPanic');
   s.menu={open:false,show(title,message,actions){Object.assign(this,{title,message,actions,open:true});},close(){this.open=false;}};
+  let triggered=0;s.startRobotMalfunction=()=>{triggered++;s.menu.close();};
   s.interact('pharmacist');for(const line of text.pharmacist){assert.equal(s.menu.message,line);s.menu.actions[0].run();}
-  assert.equal(s.state.introFinished,true);assert.equal(s.state.objective,'collectPrescription');assert.equal(s.menu.open,false);
+  assert.equal(triggered,1);assert.equal(s.state.introFinished,true);assert.equal(s.state.objective,'collectPrescription');assert.equal(s.menu.open,false);
 });
 test('winter textures are cached separately and sunny artwork is untouched',()=>{
   const pixels=new Uint8ClampedArray([120,162,83,255,72,84,106,255]),textures=new Map();let copies=0;
