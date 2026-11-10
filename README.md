@@ -249,6 +249,27 @@ New editable data/dialogue is in `scenarios/medicineMissionData.js`. `mission/mo
 
 Verification: 101 automated tests pass. Real browser checks verified the locked/unlocked desk, walking to it, open/close persistence, all three challenges, both supportive correction branches, saved reminders, three personalised cards, Adventure 3 placeholder and selection returning to Adventure 1's opening call. Landscape touch testing completed a plan with one reminder and no backup, checked the light-clothing/no-water feedback, optional audio running and the Next Adventure button. No browser errors were observed. Physical iPad/Safari testing and audible sound-quality review remain necessary. Hard-refresh before testing.
 
+## High street and School Road expansion (environment only)
+
+The same BirminghamStreet scene now extends east beyond Willow Lane into a small high street, with **POST OFFICE**, **FISH & CHIPS**, **SUPERMARKET** and **FRUIT & VEG** exteriors. Distinct signs, windows/doors, produce crates, postbox, trolley area, bicycle, planting, benches, bins and lamps use the existing palette and 32px tiles. Shop interiors and shopping interactions are intentionally absent. Each shop in `src/neighbourhood/townLayout.js` has an ID, footprint, entry anchor, future interaction zone and `futureScene:null` for later attachment.
+
+School Road branches south at x3552–3712 from the existing east–west road (y448–608). A zebra crossing at x3496–3544 connects the northern pavement to the western School Road route. Follow either pavement south past the houses and gardens, through the open gates, then follow the courtyard paving east to the school’s upright main entrance. The school has a modern large facade, windows, canopy, grounds, fencing, trees and benches. No pupils, staff, classrooms or Adventure 3 logic have been added. The entrance only shows **School Day Survival — Coming Soon!**, leaving adventure state and objectives unchanged.
+
+World dimensions are now **4352 × 3328**, with origin **(0, -1152)** and bottom-right **(4352, 2176)**. The original house `(208,368)`, street/park entry `(1728,614)` and pharmacy return `(2272,-546)` are unchanged. The existing park scene, Jay/friends and football, pharmacist, bedroom and return-home systems are reused unchanged. Movement remains cardinal Arcade Physics with grouped rectangles; there is no pathfinding or minimap to update.
+
+The school entrance anchor is **(4048,1744)**; its interaction rectangle is **(4000,1728,96,80)** in `townLayout.js`. The school’s footprint is `(3808,1472,480,256)`. The courtyard sits at the southern end of School Road, with a paved turn towards the building’s south-facing entrance. Unused land outside the developed routes has grass backdrops and boundary rectangles, so the expanded camera has no blank canvas areas.
+
+Implementation: `src/neighbourhood/townLayout.js` adds modular shop/road/school/furniture/solid data; `src/pixel/town.js` draws three cached map sections (1536 × 768, 1536 × 768, 1536 × 640). `world.js` expands bounds/appends solids; the existing street already uses WORLD for camera and physics. `pixel/environment.js` adds the sections, `pixel/winter.js` creates separate frosted versions while retaining readable shop/school signs, and the shared Willow house painter accepts optional house numbers. `StreetScene.js` adds only the school interaction/prompt. No new town scene or per-frame art generation is used.
+
+### Review route and checks
+
+1. Hard-refresh and leave the original house. Walk east past the park, bus stop and Willow Lane junction to the four new shops. Check clear pavements, distinct signs/windows and solid furniture. Shop doors do not load unfinished scenes.
+2. Find **SCHOOL ROAD**, cross at the zebra and turn south. Follow the west pavement through the gates to the courtyard, turn east and approach the school door. Press E/tap INTERACT, then repeat to check the coming-soon message. The objective must not change.
+3. Return the same way, or use the other School Road pavement. Visit the park, original house and Willow Lane Pharmacy to check existing entry/exit points. Repeat with Adventure 2 for frosted scenery, then replay both adventures normally.
+4. Test held/released touch directions, camera tracking across section boundaries, collision outlines and gate openings on an iPad in landscape.
+
+Verification: **106 Node tests pass**, including reversible full routes, both School Road pavements/gates, all shop approaches, unchanged existing entries, repeatable state-neutral school interactions and twenty cached map re-entries. Real browser checks covered all four shop signs in summer/winter, School Road/courtyard walking, the school interaction in both adventures, walking back to the original house, pharmacy enter/exit, park/football and Adventure 1 completion. Repeated pharmacy visits retained 21 textures, 144 street objects and 127 static bodies in the warmed winter test, with no accumulating objects or browser errors. Native touch-emulated movement crossed a map-section boundary and activated the school entrance. Physical iPad/Safari performance and a complete manual replay of both adventures remain review steps; the existing adventure mechanics are covered by the regression suite.
+
 ## GitHub Pages after review
 
 After reviewing and committing the files, use **Settings → Pages → Deploy from a branch**, select the desired branch and **/ (root)**. Paths are relative and work under a repository URL. No build configuration is needed. This task does not commit or push changes.

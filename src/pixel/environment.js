@@ -1,6 +1,7 @@
 import { BIRMINGHAM as WORLD, TILE, houses, shop, obstacles } from '../world.js';
 import { drawWillowLane } from './willowLane.js';
 import { seasonalTexture } from './winter.js';
+import { drawTown } from './town.js';
 import { PALETTE as p, createTileSet, tileArea, pixelRect } from './tiles.js';
 import { makeTerrace, drawShop, pixelLabel } from './buildings.js';
 
@@ -103,4 +104,5 @@ export function drawPixelEnvironment(scene) {
   }
   scene.add.image(0,0,seasonalTexture(scene,key)).setOrigin(0);
   drawWillowLane(scene);
+  drawTown(scene);
 }

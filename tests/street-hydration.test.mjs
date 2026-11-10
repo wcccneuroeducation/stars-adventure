@@ -8,6 +8,7 @@ import { parkZone, shopZone, obstacles, STREET_ENTRIES, WORLD } from '../src/wor
 import { streetText } from '../src/scenarios/streetText.js';
 import { backpackActions } from '../src/ui/backpack.js';
 import { HydrationHud } from '../src/ui/HydrationHud.js';
+import { school,townText } from '../src/neighbourhood/townLayout.js';
 
 globalThis.Phaser={Scene:class{},Input:{Keyboard:{JustDown:()=>false}},Geom:{Rectangle:{Contains:(r,x,y)=>x>=r.x&&x<r.x+r.width&&y>=r.y&&y<r.y+r.height}}};
 const { StreetScene }=await import('../src/StreetScene.js');
@@ -33,6 +34,14 @@ function streetFixture() {
   scene.scene={start:(key,data)=>{scene.destination={key,data};}};
   return scene;
 }
+
+test('school entrance is an environment-only repeatable message in both existing adventures',()=>{
+  for(const objective of ['headHome','findPrescription']){
+    const s=streetFixture();s.state.objective=objective;s.schoolZone=school.zone;s.player.x=school.entrance.x;s.player.y=school.entrance.y;
+    s.controls.consumeInteraction=()=>true;s.controls.direction=()=>({x:0,y:0});const saved=JSON.stringify(s.state);
+    for(let i=0;i<4;i++){s.update();assert.equal(s.menu.message,townText.schoolSoon);assert.equal(s.destination,undefined);assert.equal(JSON.stringify(s.state),saved);s.menu.actions[0].run();}
+  }
+});
 
 test('street uses resolved body displacement and freezes for each actual UI/pause condition',()=>{
   for(const block of [scene=>scene.dialog.open=true,scene=>scene.menu.open=true,scene=>scene.physics.world.isPaused=true,scene=>scene.sys.isActive=()=>false,()=>document.hidden=true,()=>document.hasFocus=()=>false,scene=>scene.game.isPaused=true]) {

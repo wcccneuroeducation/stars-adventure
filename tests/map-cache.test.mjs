@@ -18,9 +18,10 @@ test('repeated map visits reuse baked textures instead of painting or allocating
   },add:{rectangle(){return {setDepth(){return this;}};},image(){images++;return {setOrigin(){return this;}};}}};
   drawPixelEnvironment(scene);drawPark(scene);
   const firstPaint=operations;
-  assert.ok(firstPaint>0&&firstPaint<35000,'Terrain painting should remain bounded');
+  assert.ok(firstPaint>0&&firstPaint<60000,`Terrain painting should remain bounded: ${firstPaint}`);
   for(let visit=0;visit<20;visit++){drawPixelEnvironment(scene);drawPark(scene);}
-  assert.equal(operations,firstPaint);assert.equal(images,63);
-  assert.deepEqual(created.map(texture=>texture.key),['birmingham-environment','willow-lane-environment','small-heath-park','player-back']);
-  assert.equal(textures.size,5);
+  assert.equal(operations,firstPaint);assert.equal(images,126);
+  assert.deepEqual(created.map(texture=>texture.key),['birmingham-environment','willow-lane-environment','town-expansion-0','town-expansion-1','town-expansion-2','small-heath-park','player-back']);
+  assert.ok(created.every(t=>t.width<=2048&&t.height<=2176),'Map sections stay within modest texture sizes');
+  assert.equal(textures.size,8);
 });

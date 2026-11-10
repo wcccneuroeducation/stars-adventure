@@ -25,7 +25,7 @@ export function paintLaneHouse(ctx,tiles,h){
   r(porchX+4,y+112,24,48,p.cream);r(porchX+6,y+114,20,44,colour);
   r(porchX+9,y+117,14,10,'#83a7a8');r(porchX+20,y+139,3,3,'#f5cb71');
   r(porchX,y+158,32,2,p.cream);
-  pixelLabel(ctx,String(2+willowHouses.indexOf(h)),mainX+48,y+99,8,p.cream);
+  pixelLabel(ctx,String(h.number??2+willowHouses.indexOf(h)),mainX+48,y+99,8,p.cream);
 }
 
 export function paintWillowLane(ctx){

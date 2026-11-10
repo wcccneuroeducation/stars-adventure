@@ -11,7 +11,10 @@ export function seasonalTexture(scene,key){
     const x=(i/4)%source.width,y=Math.floor(i/4/source.width);
     // Preserve recognisable shop colours below the frosted roofs.
     if((key==='willow-lane-environment'&&x>=32&&x<180&&y>=496&&y<608)||
-       (key==='birmingham-environment'&&x>=1344&&x<1632&&y>=216&&y<352))continue;
+       (key==='birmingham-environment'&&x>=1344&&x<1632&&y>=216&&y<352)||
+       (key==='town-expansion-0'&&y>=216&&y<352&&((x>=64&&x<320)||(x>=384&&x<640)||(x>=704&&x<1088)||(x>=1120&&x<1440)))||
+       (key==='town-expansion-0'&&y>=360&&y<384&&x>=1136&&x<1296&&(x-1136)%32<28)||
+       (key==='town-expansion-2'&&x>=992&&x<1472&&y<192))continue;
     const r=d[i],g=d[i+1],b=d[i+2];
     if(g>r*1.12&&g>b*1.12){
       // Frosted grass and winter evergreen foliage, preserving pixel texture.
