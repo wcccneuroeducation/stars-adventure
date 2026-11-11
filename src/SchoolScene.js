@@ -10,9 +10,11 @@ import { schoolText as text } from './scenarios/schoolText.js';
 import { SCHOOL,schoolSolids,schoolLocation } from './school/layout.js';
 import { drawSchool } from './school/art.js';
 import { ensureSchoolDay } from './school/SchoolDayRuntime.js';
+import { SchoolStory } from './school/SchoolStory.js';
+import { schoolStoryText } from './scenarios/schoolStory.js';
 import { schoolDayText } from './scenarios/schoolDayText.js';
 
-// Location-only scene: rooms/courtyard connect through walk-through doorways.
+// Shared school environment; Adventure 3 alone adds timetable-linked characters.
 export class SchoolScene extends Phaser.Scene{
   constructor(){super('School');}
   create(){
@@ -31,8 +33,12 @@ export class SchoolScene extends Phaser.Scene{
     this.hydrationHud=new HydrationHud(this,this.state,{
       onBackpack:()=>{if(!this.menu.open)openBackpack(this.menu,this.state,()=>this.hydrationHud.render());},
       onPause:()=>{if(!this.menu.open)this.menu.show(streetText.paused,streetText.pausedMessage,[{label:streetText.resume,run:()=>this.menu.close()}]);}
-    }); // Preserve shared state; no school lessons, adventure timers or exertion.
+    }); // Shared status persists; ordinary school exploration adds no tiredness.
     this.schoolDay=ensureSchoolDay(this);
+    if(this.schoolDay){
+      if(!this.state.schoolDay.entered){this.player.setPosition(800,416);this.state.schoolDay.entered=true;}
+      this.story=new SchoolStory(this,solids);
+    }
     this.prompt=this.add.text(800,2096,text.exit,{fontFamily:'monospace',fontSize:12,color:'#fff0be',backgroundColor:'#294e4b',padding:{x:8,y:6}}).setOrigin(.5,1).setDepth(20).setVisible(false);
     this.debug=this.add.graphics().setDepth(30).setVisible(false);this.debug.lineStyle(2,0xff6686);
     schoolSolids.forEach(r=>this.debug.strokeRect(r.x,r.y,r.width,r.height));
@@ -46,20 +52,23 @@ export class SchoolScene extends Phaser.Scene{
     if(this.transitioning||this.menu.open)return;
     this.transitioning=true;this.player.setVelocity(0);this.controls.reset();this.scene.start('BirminghamStreet',{entry:'school'});
   }
-  update(){
+  update(time){
     if(!this.controls)return;
     const pressed=this.controls.consumeInteraction();if(Phaser.Input.Keyboard.JustDown(this.controls.keys.C))this.toggleDebug();
     const busy=this.menu.open||this.transitioning||this.physics.world.isPaused||document.hidden||!document.hasFocus();
     const d=busy?{x:0,y:0}:this.controls.direction();this.player.setVelocity(d.x*150,d.y*150);if(d.x)this.player.setFlipX(d.x<0);
     this.shadow.setPosition(this.player.x,this.player.y+12);
     const z=SCHOOL.exit,near=this.player.x>=z.x&&this.player.x<z.x+z.width&&this.player.y+10>=z.y&&this.player.y+10<z.y+z.height;
-    const checkIn=this.schoolDay?.canCheckIn();
-    this.prompt.setVisible((near||Boolean(checkIn))&&!busy);
+    this.story?.update(time,busy);
+    const person=this.story?.nearby();
+    const checkIn=!this.story&&this.schoolDay?.canCheckIn();
+    this.prompt.setVisible((near||Boolean(person)||Boolean(checkIn))&&!busy);
     if(near)this.prompt.setText(text.exit).setPosition(800,2096);
+    else if(person)this.prompt.setText(schoolStoryText.talk(person.label.text)).setPosition(person.sprite.x,person.sprite.y-46);
     else if(checkIn)this.prompt.setText(schoolDayText.arrivalPrompt).setPosition(this.player.x,this.player.y-25);
     const location=schoolLocation(this.player.x,this.player.y+10);
     if(location!==this.location||near!==this.wasNear){document.querySelector('#hint').textContent=near?text.exitHint:text.locations[location];this.location=location;this.wasNear=near;}
     if(near&&pressed&&!busy)this.leave();
-    else if(pressed&&!busy)this.schoolDay?.interactArrival();
+    else if(pressed&&!busy){if(!this.story?.interact())this.schoolDay?.interactArrival();}
   }
 }

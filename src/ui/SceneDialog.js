@@ -21,7 +21,8 @@ export class SceneDialog {
     scene.events.once('shutdown', () => this.destroy());
   }
   get open() { return this.element.open; }
-  show(title, message, actions, { required = false, content = null } = {}) {
+  show(title, message, actions, { required = false, content = null, restRecovery = false } = {}) {
+    this.element.dataset.restRecovery=String(restRecovery);
     this.required = required;
     this.controls.reset();
     this.scene.player.setVelocity(0);

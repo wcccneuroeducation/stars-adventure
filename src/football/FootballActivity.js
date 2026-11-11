@@ -85,7 +85,7 @@ export class FootballActivity {
       {label:text.backpack,run:()=>this.openRestBackpack()},
       {label:text.leave,run:()=>{this.stop();s.menu.close();}},
       {label:text.tellAdult,run:()=>this.showAdult()}
-    ]);
+    ],{restRecovery:true});
   }
   openRestBackpack(){
     const s=this.scene;

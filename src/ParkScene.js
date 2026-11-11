@@ -101,7 +101,7 @@ export class ParkScene extends StreetScene {
         this.restPosition={x:this.player.x,y:this.player.y};this.resting=true;
         this.player.setVelocity(0);this.player.body.enable=false;
         this.player.setTexture('player').setPosition(seating.x+seating.width/2,seating.y+4);
-        this.menu.show(parkText.restingTitle,parkText.resting,[{label:parkText.stand,run:()=>{this.finishRest();close();}}]);
+        this.menu.show(parkText.restingTitle,parkText.resting,[{label:parkText.stand,run:()=>{this.finishRest();close();}}],{restRecovery:true});
       }
     },{label:parkText.leave,run:close}]);
     if(id==='fountain')this.menu.show(parkText.objects.fountain,parkText.fountain,

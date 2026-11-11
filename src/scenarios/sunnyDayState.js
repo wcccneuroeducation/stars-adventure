@@ -1,6 +1,7 @@
 import { hydrationSettings } from '../settings/hydration.js';
 import { BOTTLE_CAPACITY } from '../mechanics/waterBottle.js';
 import { createSchoolDay } from '../school/dayModel.js';
+import { ensurePlayerStatus } from '../mechanics/playerStatus.js';
 const KEY = 'kickstart.sunnyDay';
 const COLD_KEY='kickstart.pharmacyPanic';
 const SCHOOL_KEY='kickstart.schoolDay';
@@ -14,6 +15,7 @@ export function getSunnyDayState(registry) {
     startNewAdventure(registry,adventure);
   }
   const state = registry.get(key);
+  ensurePlayerStatus(state);
   // Compatibility with a run created before the hydration mechanic existed.
   if (state.hydration === undefined) state.hydration = hydrationSettings.initial;
   // Migrate old runs once; an explicitly empty bottle must stay empty.
@@ -30,6 +32,7 @@ export function startNewAdventure(registry,adventure='sunnyDay') {
   Object.assign(state,{adventure,warmClothing:false,wearingHat:false,warmClothingOnDeparture:null,drankWater:false,pharmacyArrived:false,introFinished:false});
   if(adventure==='pharmacyPanic')state.objective='collectPrescription';
   if(adventure==='schoolDay'){state.objective='schoolTimetable';state.callComplete=true;state.schoolDay=createSchoolDay();}
+  ensurePlayerStatus(state);
   registry.set('kickstart.activeAdventure',adventure);
   registry.set(adventure==='schoolDay'?SCHOOL_KEY:adventure==='pharmacyPanic'?COLD_KEY:KEY, state);
   return state;

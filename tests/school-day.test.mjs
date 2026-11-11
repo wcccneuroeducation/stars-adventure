@@ -26,7 +26,7 @@ test('pause/dialogue/minigame conditions and suspended-browser gaps cannot accum
 });
 test('arrivals require the right room and check-ins are optional, idempotent and period-specific',()=>{
   const day=createSchoolDay();assert.equal(recogniseArrival(day,'science'),false);assert.equal(completeSchoolPeriod(day),false);
-  assert.equal(recogniseArrival(day,'reception'),true);assert.equal(recogniseArrival(day,'reception'),false);
+  assert.equal(recogniseArrival(day,'courtyard'),true);assert.equal(recogniseArrival(day,'courtyard'),false);
   assert.equal(completeSchoolPeriod(day),true);assert.equal(completeSchoolPeriod(day),false);
   day.minutes=toMinutes('08:50');advanceSchoolDay(day,16);assert.equal(day.arrived,false);assert.equal(day.destination,'classroom-1');
   recogniseArrival(day,'classroom-1');assert.equal(completeSchoolPeriod(day,'arrival'),false);assert.equal(completeSchoolPeriod(day),true);

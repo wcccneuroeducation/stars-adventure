@@ -4,6 +4,8 @@ import { schoolText } from '../scenarios/schoolText.js';
 import { schoolLocation } from './layout.js';
 import { currentPeriod,advanceSchoolDay,recogniseArrival,completeSchoolPeriod,formatSchoolTime } from './dayModel.js';
 import { getSunnyDayState } from '../scenarios/sunnyDayState.js';
+import { availableStories } from './storyModel.js';
+import { schoolCharacters,schoolStoryText } from '../scenarios/schoolStory.js';
 
 // One runtime per Phaser.Game, using simulation deltas across scene transitions.
 // Saved state is separate from the scene and from Adventures 1/2.
@@ -59,7 +61,7 @@ export class SchoolDayRuntime{
     const time=formatSchoolTime(d.minutes);if(this.clock.textContent!==time)this.clock.textContent=time;
     const label=`${p.label} · ${schoolText.locations[p.room]}`;if(this.activity.textContent!==label)this.activity.textContent=label;
     const soundLabel=d.audioEnabled?text.soundOn:text.soundOff;if(this.sound.textContent!==soundLabel)this.sound.textContent=soundLabel;
-    this.checkIn.hidden=!(d.arrived&&d.currentRoom===d.destination&&!d.completedPeriods.includes(p.id));
+    this.checkIn.hidden=Boolean(this.scene()?.story)||!(d.arrived&&d.currentRoom===d.destination&&!d.completedPeriods.includes(p.id));
   }
   showTimetable(){
     const menu=this.menu(),d=this.day();if(!menu||document.querySelector('dialog[open]'))return;
@@ -70,10 +72,14 @@ export class SchoolDayRuntime{
     }
     const list=document.createElement('ol');
     schoolTimetable.forEach((period,i)=>{const item=document.createElement('li');item.textContent=`${period.time} — ${period.label} · ${schoolText.locations[period.room]}`;if(i===d.periodIndex){item.setAttribute('aria-current','true');item.className='current-period';}list.append(item);});content.append(list);
+    const heading=document.createElement('h3');heading.textContent=schoolStoryText.pending;content.append(heading);
+    const pending=document.createElement('ul');
+    for(const event of availableStories(d)){const item=document.createElement('li');item.textContent=`${schoolCharacters[event.actor].name} — ${schoolText.locations[event.room]}`;pending.append(item);}content.append(pending);
     menu.show(text.timetable,'',[{label:text.close,run:()=>menu.close()}],{content});
   }
   canCheckIn(){const d=this.day();return Boolean(d&&d.arrived&&d.currentRoom===d.destination&&!d.completedPeriods.includes(currentPeriod(d).id));}
   interactArrival(){
+    if(this.scene()?.story){this.scene().story.interact();return;}
     const menu=this.menu();if(!menu||document.querySelector('dialog[open]')||!this.canCheckIn())return;
     const d=this.day(),period=currentPeriod(d);
     menu.show(period.label,text.placeholder(period.label),[{label:text.continue,run:()=>{completeSchoolPeriod(d,period.id);menu.close();this.notice.hidden=false;this.noticeRemaining=4000;this.notice.textContent=text.acknowledged;this.render();}}]);

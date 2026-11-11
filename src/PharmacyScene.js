@@ -41,7 +41,7 @@ export class PharmacyScene extends Phaser.Scene{
     this.hydrationHud=new HydrationHud(this,this.state,{
       onBackpack:()=>{if(!this.menu.open)openBackpack(this.menu,this.state,()=>this.hydrationHud.render());},
       onPause:()=>{if(!this.menu.open)this.menu.show(streetText.paused,streetText.pausedMessage,[{label:streetText.resume,run:()=>this.menu.close()}]);}
-    }); // No outdoor hydration listener in this indoor scene.
+    }); // Shared game-level status runtime also covers indoor play.
     this.prompt=this.add.text(0,0,'',{fontFamily:'monospace',fontSize:12,color:'#fff0be',backgroundColor:'#294e4b',padding:{x:8,y:5}}).setOrigin(.5,1).setDepth(20);
     this.debug=this.add.graphics().setDepth(30).setVisible(false);this.debug.lineStyle(2,0xff6686);
     pharmacySolids.forEach(r=>this.debug.strokeRect(r.x,r.y,r.width,r.height));

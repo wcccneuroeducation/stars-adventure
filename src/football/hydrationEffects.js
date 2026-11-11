@@ -1,4 +1,5 @@
 import { footballSettings as config } from '../settings/football.js';
+import { tirednessSpeedMultiplier } from '../mechanics/playerStatus.js';
 
 // Narrative flags persist across matches/scene changes, not hydration depletion.
 export function footballHydrationEffects(state) {
@@ -10,5 +11,5 @@ export function footballHydrationEffects(state) {
   return null;
 }
 export function footballSpeed(state) {
-  return 150*(state.hydration<=config.tiredThreshold?config.tiredSpeedMultiplier:1);
+  return 150*(state.hydration<=config.tiredThreshold?config.tiredSpeedMultiplier:1)*tirednessSpeedMultiplier(state);
 }

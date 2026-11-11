@@ -18,6 +18,9 @@ export function drinkWater(state) {
 export function advanceHydration(state, movementMs, context) {
   if (!context.outdoors || !context.moving || context.dialogOpen || context.paused || !context.focused) return 0;
   const elapsed = Number.isFinite(movementMs) ? Math.max(0, movementMs) : 0;
+  // The game-level status runtime owns depletion. Keep resolved movement timing
+  // for the independent football script without applying a second loss here.
+  if(context.statusManaged)return elapsed;
   const multiplier=(context.rateMultiplier ?? 1)*(state.adventure==='pharmacyPanic'?coldMorningSettings.walkingHydrationMultiplier:1);
   state.hydration = clampHydration(state.hydration - elapsed / 1000 * settings.pointsPerSecond * multiplier);
   state.lowestHydration=Math.min(state.lowestHydration??state.hydration,state.hydration);

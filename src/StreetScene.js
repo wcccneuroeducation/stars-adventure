@@ -94,7 +94,7 @@ export class StreetScene extends Phaser.Scene{
   const previous=this.hydrationMovement.previous;
   const distance=previous?Math.hypot(this.player.body.x-previous.x,this.player.body.y-previous.y):0;
   const context={
-   outdoors:true,moving:distance>0.001,dialogOpen:this.dialog.open||this.menu.open,rateMultiplier:this.hydrationRateMultiplier??1,
+   outdoors:true,moving:distance>0.001,dialogOpen:this.dialog.open||this.menu.open,rateMultiplier:this.hydrationRateMultiplier??1,statusManaged:Boolean(this.game.playerStatusRuntime),
    // Use the same current browser focus state as movement. Game.hasFocus starts
    // false and is event-driven, so it can be stale on an already-focused page.
    paused:this.game.isPaused||this.physics.world.isPaused||!this.sys.isActive(),focused:!document.hidden&&document.hasFocus()

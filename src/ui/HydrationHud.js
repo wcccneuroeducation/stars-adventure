@@ -7,10 +7,14 @@ import { prescriptionText } from '../scenarios/prescriptionData.js';
 import { openPrescriptionCard } from '../prescription/card.js';
 import { missionText } from '../scenarios/medicineMissionData.js';
 import { schoolDayText } from '../scenarios/schoolDayText.js';
+import { ensurePlayerStatusRuntime } from '../mechanics/PlayerStatusRuntime.js';
+import { ensurePlayerStatus } from '../mechanics/playerStatus.js';
+import { playerStatusText } from '../scenarios/playerStatusText.js';
 
 export class HydrationHud {
   constructor(scene, state, { onBackpack, onPause } = {}) {
     this.state = state;
+    ensurePlayerStatus(state);ensurePlayerStatusRuntime(scene);
     this.element = document.createElement('div');
     this.element.className = 'adventure-status';
     const meterGroup = document.createElement('div');meterGroup.className = 'hydration-group';
@@ -22,6 +26,13 @@ export class HydrationHud {
     this.percentage = document.createElement('span');this.percentage.className = 'hydration-value';
     const note = document.createElement('small');note.textContent = text.fictional;
     meterGroup.append(label,this.meter,this.percentage,note);this.element.append(meterGroup);
+    const tired=document.createElement('div');tired.className='hydration-group tiredness-group';
+    const tiredLabel=document.createElement('span');tiredLabel.textContent=playerStatusText.tiredness;
+    this.tiredMeter=document.createElement('div');this.tiredMeter.className='hydration-meter';
+    this.tiredMeter.setAttribute('role','meter');this.tiredMeter.setAttribute('aria-label',`${playerStatusText.tiredness}. ${playerStatusText.fictional}`);
+    this.tiredMeter.setAttribute('aria-valuemin','0');this.tiredMeter.setAttribute('aria-valuemax','100');
+    this.tiredFill=document.createElement('div');this.tiredFill.className='tiredness-fill';this.tiredMeter.append(this.tiredFill);
+    this.tiredValue=document.createElement('span');this.tiredValue.className='hydration-value';tired.append(tiredLabel,this.tiredMeter,this.tiredValue);this.element.append(tired);
     const actions = document.createElement('div');actions.className = 'status-actions';
     for (const [title, run] of [[text.backpack,onBackpack],[text.pause,onPause]]) {
       if (!run) continue;
@@ -42,6 +53,7 @@ export class HydrationHud {
     this.render();
   }
   render() {
+    if(this.tiredFill){const value=this.state.tiredness??0;if(value!==this.lastTiredness){this.lastTiredness=value;this.tiredFill.style.width=`${value}%`;this.tiredMeter.setAttribute('aria-valuenow',String(Math.round(value)));this.tiredValue.textContent=`${Math.round(value)}%`;}}
     if(this.prescriptionButton){
       const active=Boolean(this.state.prescription?.started);this.prescriptionButton.hidden=!active;this.basketElement.hidden=!active;
       if(active)this.basketElement.textContent=prescriptionText.basket(this.state.prescription.found.length);
